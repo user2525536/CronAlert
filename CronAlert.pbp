@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.42 LTS (Windows - x64)">
+  <section name="config">
+    <options closefiles="1" openmode="0" name="CronAlert"/>
+    <comment>Copyright 2016 pcfreak</comment>
+  </section>
+  <section name="data">
+    <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
+    <log show="1"/>
+    <lastopen date="2016-08-07 21:37" user="pcfreak" host="D4"/>
+  </section>
+  <section name="files">
+    <file name="src\CFileIteratorC.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="62e862e05f7d28e33282f3a0d53ba1a0"/>
+    </file>
+    <file name="src\CronAlert.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="21d10d4ffc94e21ddc6a55c32c772ac6"/>
+    </file>
+    <file name="src\CStringIteratorC.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="aedc9d7c882e4b1f28a968cbcb504624"/>
+    </file>
+    <file name="src\CTextParser.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="1be5b815076097b5f558bbc820a3b909"/>
+    </file>
+    <file name="src\IIteratorC.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="e541ea808fbf84377477508837ca1ae4"/>
+    </file>
+    <file name="src\ITextParser.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="2ce1c85fb466c8135e2070b5fda7b9f2"/>
+    </file>
+    <file name="src\TextToSpeech.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="0a322997e78679edc7c1a0561986235a"/>
+    </file>
+    <file name="src\Utility.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="0ad2dcdbad371f5aa10a3a579df7c0f7"/>
+    </file>
+    <file name="src\WinComApi.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="659c790b61b3d0e94a39b94ccfe7be86"/>
+    </file>
+  </section>
+  <section name="targets">
+    <target name="Debug" enabled="0" default="1">
+      <inputfile value="src\CronAlert.pb"/>
+      <outputfile value="bin\CronAlert.exe"/>
+      <options unicode="1" thread="1" xpskin="1" debug="1"/>
+      <icon enable="1">etc\main.ico</icon>
+    </target>
+    <target name="Release" enabled="1" default="0">
+      <inputfile value="src\CronAlert.pb"/>
+      <outputfile value="bin\CronAlert.exe"/>
+      <executable value="bin\CronAlert.exe"/>
+      <options unicode="1" thread="1" xpskin="1"/>
+      <icon enable="1">etc\main.ico</icon>
+      <versioninfo enable="1">
+        <field0 value="1,1,2,0"/>
+        <field1 value="1,1,2,0"/>
+        <field2 value="pcfreak"/>
+        <field3 value="CronAlert"/>
+        <field4 value="1.1.2"/>
+        <field5 value="1.1.2"/>
+        <field6 value="CronAlert"/>
+        <field7 value="CronAlert"/>
+        <field8 value="CronAlert"/>
+        <field9 value="Copyright 2016 pcfreak"/>
+        <field14 value="http://pcfreak.privatedns.org:8085/proggys/"/>
+        <field16 value="VFT_APP"/>
+        <field17 value="0409 English (United States)"/>
+      </versioninfo>
+    </target>
+  </section>
+</project>

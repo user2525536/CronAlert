@@ -1,0 +1,14 @@
+Version 1.1.2 (2016-08-06)
+ - fixed: ETA calculation bug for rare cases
+ 
+ Version 1.1.1 (2016-08-06)
+ - fixed: ETA calculation bug for rare cases
+
+Version 1.1.0 (2016-08-06)
+ - added: support for month and weekday names via abbreviations
+ - added: @preTrigger pragma to control time trigger time before the actual event
+ - added: readme file
+ - changed: ETA display to show time until 1 week in advance
+
+Version 1.0.0 (2016-08-06)
+ - first release
