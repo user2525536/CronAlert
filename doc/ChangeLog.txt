@@ -1,3 +1,7 @@
+Version 1.1.3 (2016-08-08)
+ - fixed: unneeded file update on click in alert list
+ - fixed: freeze on invalid triggers
+
 Version 1.1.2 (2016-08-06)
  - fixed: ETA calculation bug for rare cases
  

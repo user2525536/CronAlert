@@ -103,7 +103,7 @@ EndEnumeration
 #MinUpdateInterval = 5 ; seconds
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion = #ConfigFileVersion1
-#Version = "1.1.2"
+#Version = "1.1.3"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -260,12 +260,15 @@ Repeat
 			Select EventType()                   
 			Case #PB_EventType_Change
 				ForEach alerts()
-					fileWasChanged = #True
-					SetWindowTitle(#WID_Main, mainWindowTitle + " - " + openFile + "*")
 					If GetGadgetItemState(#GID_AlertList, ListIndex(alerts())) & #PB_ListIcon_Checked = #PB_ListIcon_Checked
-						alerts()\enabled = #True
+						i = #True
 					Else
-						alerts()\enabled = #False
+						i = #False
+					EndIf
+					If i <> alerts()\enabled
+						fileWasChanged = #True
+						SetWindowTitle(#WID_Main, mainWindowTitle + " - " + openFile + "*")
+						i = alerts()\enabled
 					EndIf
 				Next
 			EndSelect
@@ -587,6 +590,15 @@ Procedure.i MainWindowUpdateAlertEta(now.i, month.i, wday.i, day.i, hour.i, min.
 				ProcedureReturn #False
 			EndIf
 			lastTime = match
+		EndIf
+		If month <> -1 And wday <> -1 And day <> -1 And hour <> -1 And min <> -1
+			If lastTime = -1
+				; invalid trigger
+				ProcedureReturn #False
+			Else
+				; only one choice
+				Break
+			EndIf
 		EndIf
 	Until match >= now
 	match = match - now
@@ -1051,8 +1063,8 @@ DataSection
 	IconDataCommandEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 81
-; FirstLine = 57
+; CursorPosition = 76
+; FirstLine = 54
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
