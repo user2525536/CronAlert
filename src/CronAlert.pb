@@ -111,14 +111,13 @@ Declare.i MainWindowSaveUserConfig()
 Declare.i MainWindowUpdateSizes()
 Declare.i MainWindowUpdateMenus()
 Declare.i MainWindowResizeGadgets()
-Declare.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, month.i, wday.i, day.i, hour.i, min.i)
-Declare.i MainWindowUpdateAlertEta(item.i, min.i, hour.i, day.i, month.i, wday.i)
-Declare.i MainWindowUpdateAlertEta(now.i, month.i, wday.i, day.i, hour.i, min.i)
-Declare.i MainWindowUpdateAlertEtaMins(now.i, month.i, wday.i, day.i, hour.i)
-Declare.i MainWindowUpdateAlertEtaHours(now.i, month.i, wday.i, day.i)
-Declare.i MainWindowUpdateAlertEtaDays(now.i, month.i, wday.i)
-Declare.i MainWindowUpdateAlertEtaWDays(now.i, month.i)
-Declare.i MainWindowUpdateAlertEtaMonths(now.i)
+Declare.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, wday.i, month.i, day.i, hour.i, min.i)
+Declare.i MainWindowUpdateAlertEta(now.i, limit.i, wday.i, month.i, day.i, hour.i, min.i)
+Declare.i MainWindowUpdateAlertEtaMins(now.i, limit.i, wday.i, month.i, day.i, hour.i)
+Declare.i MainWindowUpdateAlertEtaHours(now.i, limit.i, wday.i, month.i, day.i)
+Declare.i MainWindowUpdateAlertEtaDays(now.i, limit.i, wday.i, month.i)
+Declare.i MainWindowUpdateAlertEtaMonths(now.i, limit.i, wday.i)
+Declare.i MainWindowUpdateAlertEtaWDays(now.i)
 Declare.i MainWindowRefresh()
 Declare.i MainWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
 Declare.i MainWindowUpdateCronAlert(force.i = #False)
@@ -200,7 +199,7 @@ SetWindowCallback(@MainWindowCallback())
 MainWindowResizeGadgets()
 MainWindowRefresh()
 ; AddWindowTimer() does not work while we are processing window events
-SetTimer_(WindowID(#WID_Main), #TID_Refresh, 1000, #Null)
+SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
 
 WM_TASKBARCREATED = RegisterWindowMessage_("TaskbarCreated")
 
@@ -235,7 +234,8 @@ For i = 0 To CountProgramParameters() - 1
 			If Mid(clParam, 1, 1) = ~"\""
 				clParam = Mid(clParam, 2, Len(clParam) - 2)
 			EndIf
-			MainWindowLoadCronAlert(clParam)
+			openFile = clParam
+			hasOpenFile = #True
 		Else
 			MessageRequester("Error", "Unknown program option '" + clParam + "'.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 			ExitProgram()
@@ -244,7 +244,12 @@ For i = 0 To CountProgramParameters() - 1
 	clParam = ProgramParameter()
 Next
 
+If hasOpenFile And openFile <> ""
+	MainWindowLoadCronAlert(openFile)
+EndIf
+
 MainWindowUpdateMenus()
+CheckWindowPosition(#WID_Main)
 
 AtExit(@MainWindowCleanUp())
 
@@ -389,8 +394,8 @@ Procedure.i MainWindowLoadUserConfig()
 				mainWindowIsHidden = #False
 			EndIf
 			HideWindow(#WID_Main, mainWindowIsHidden)
-			If loadLastFile = #True
-				MainWindowLoadCronAlert(lastFile)
+			If loadLastFile = #True And openFile <> ""
+				hasOpenFile = #True
 			EndIf
 			MainWindowUpdateSizes()
 			MainWindowResizeGadgets()
@@ -522,8 +527,8 @@ EndProcedure
 ; @param[in] hour - trigger for hour
 ; @param[in] min - trigger for minute
 ; @return trigger date time or -1 on error
-Procedure.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, month.i, wday.i, day.i, hour.i, min.i)
-	Protected.i result
+Procedure.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, wday.i, month.i, day.i, hour.i, min.i)
+	Protected.i result, year = Year(now)
 	If min = -1
 		min = Minute(now) + offset
 		offset = Int(offset / 60)
@@ -556,8 +561,11 @@ Procedure.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, month.i, wday.i, da
 			offset + 1
 		EndIf
 	EndIf
+	If offset > 0
+		year + 1
+	EndIf
 	; result will be -1 if we passed an invalid date (e.g. day 30 for February)
-	result = Date(Year(now), month, day, hour, min, 0)
+	result = Date(year, month, day, hour, min, 0)
 	; match against filter
 	If wday <> -1 And DayOfWeek(result) <> wday
 		ProcedureReturn -1
@@ -569,21 +577,21 @@ EndProcedure
 ; Convert the given cron alert values to a time prediction from now.
 ; 
 ; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
+; @param[in] limit - limit for offset
 ; @param[in] wday - trigger for weekday
+; @param[in] month - trigger for month
 ; @param[in] day - trigger for day of month
 ; @param[in] hour - trigger for hour
 ; @param[in] min - trigger for minute
 ; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEta(now.i, month.i, wday.i, day.i, hour.i, min.i)
+Procedure.i MainWindowUpdateAlertEta(now.i, limit.i, wday.i, month.i, day.i, hour.i, min.i)
 	Protected.i offset, match, lastTime
 	offset = -1
 	match = -1
 	lastTime = -1
 	Repeat
 		offset + 1
-		match = MainWindowUpdateAlertMaskToTime(now, offset, month, wday, day, hour, min)
+		match = MainWindowUpdateAlertMaskToTime(now, offset, wday, month, day, hour, min)
 		If match > 0
 			If match < lastTime
 				; overflow; we will repeat outself if we try more
@@ -600,10 +608,15 @@ Procedure.i MainWindowUpdateAlertEta(now.i, month.i, wday.i, day.i, hour.i, min.
 				Break
 			EndIf
 		EndIf
+		If offset > limit
+			; overflow; we will repeat outself if we try more
+			ProcedureReturn #False
+		EndIf
 	Until match >= now
 	match = match - now
 	If match >= 0 And (match < alerts()\eta Or alerts()\eta = -1)
 		alerts()\eta = match
+		alerts()\nextTrigger = now + match
 	EndIf
 	ProcedureReturn #True
 EndProcedure
@@ -613,19 +626,18 @@ EndProcedure
 ; The minutes value will be replaced accordingly.
 ; 
 ; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
+; @param[in] limit - limit for offset
 ; @param[in] wday - trigger for weekday
+; @param[in] month - trigger for month
 ; @param[in] day - trigger for day of month
 ; @param[in] hour - trigger for hour
-; @param[in] min - trigger for minute
 ; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEtaMins(now.i, month.i, wday.i, day.i, hour.i)
+Procedure.i MainWindowUpdateAlertEtaMins(now.i, limit.i, wday.i, month.i, day.i, hour.i)
 	If ListSize(alerts()\mins()) = 0
-		MainWindowUpdateAlertEta(now, month, wday, day, hour, -1)
+		MainWindowUpdateAlertEta(now, limit * 60, wday, month, day, hour, -1)
 	Else
 		ForEach alerts()\mins()
-			MainWindowUpdateAlertEta(now, month, wday, day, hour, alerts()\mins())
+			MainWindowUpdateAlertEta(now, limit, wday, month, day, hour, alerts()\mins())
 		Next
 	EndIf
 EndProcedure
@@ -635,19 +647,17 @@ EndProcedure
 ; The hours value will be replaced accordingly.
 ; 
 ; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
+; @param[in] limit - limit for offset
 ; @param[in] wday - trigger for weekday
+; @param[in] month - trigger for month
 ; @param[in] day - trigger for day of month
-; @param[in] hour - trigger for hour
-; @param[in] min - trigger for minute
 ; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEtaHours(now.i, month.i, wday.i, day.i)
+Procedure.i MainWindowUpdateAlertEtaHours(now.i, limit.i, wday.i, month.i, day.i)
 	If ListSize(alerts()\hours()) = 0
-		MainWindowUpdateAlertEtaMins(now, month, wday, day, -1)
+		MainWindowUpdateAlertEtaMins(now, limit * 24, wday, month, day, -1)
 	Else
 		ForEach alerts()\hours()
-			MainWindowUpdateAlertEtaMins(now, month, wday, day, alerts()\hours())
+			MainWindowUpdateAlertEtaMins(now, limit, wday, month, day, alerts()\hours())
 		Next
 	EndIf
 EndProcedure
@@ -657,41 +667,16 @@ EndProcedure
 ; The days value will be replaced accordingly.
 ; 
 ; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
+; @param[in] limit - limit for offset
 ; @param[in] wday - trigger for weekday
-; @param[in] day - trigger for day of month
-; @param[in] hour - trigger for hour
-; @param[in] min - trigger for minute
+; @param[in] month - trigger for month
 ; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEtaDays(now.i, month.i, wday.i)
+Procedure.i MainWindowUpdateAlertEtaDays(now.i, limit.i, wday.i, month.i)
 	If ListSize(alerts()\days()) = 0
-		MainWindowUpdateAlertEtaHours(now, month, wday, -1)
+		MainWindowUpdateAlertEtaHours(now, limit * 31, wday, month, -1)
 	Else
 		ForEach alerts()\days()
-			MainWindowUpdateAlertEtaHours(now, month, wday, alerts()\days())
-		Next
-	EndIf
-EndProcedure
-
-
-; Convert the given cron alert values to a time prediction from now.
-; The weekdays value will be replaced accordingly.
-; 
-; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
-; @param[in] wday - trigger for weekday
-; @param[in] day - trigger for day of month
-; @param[in] hour - trigger for hour
-; @param[in] min - trigger for minute
-; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEtaWDays(now.i, month.i)
-	If ListSize(alerts()\wdays()) = 0
-		MainWindowUpdateAlertEtaDays(now, month, -1)
-	Else
-		ForEach alerts()\wdays()
-			MainWindowUpdateAlertEtaDays(now, month, alerts()\wdays())
+			MainWindowUpdateAlertEtaHours(now, limit, wday, month, alerts()\days())
 		Next
 	EndIf
 EndProcedure
@@ -701,19 +686,31 @@ EndProcedure
 ; The months value will be replaced accordingly.
 ; 
 ; @param[in] now - current time
-; @param[in] offset - time zone offset from local timezone to target timezone
-; @param[in] month - trigger for month
+; @param[in] limit - limit for offset
 ; @param[in] wday - trigger for weekday
-; @param[in] day - trigger for day of month
-; @param[in] hour - trigger for hour
-; @param[in] min - trigger for minute
 ; @return time duration until next trigger
-Procedure.i MainWindowUpdateAlertEtaMonths(now.i)
+Procedure.i MainWindowUpdateAlertEtaMonths(now.i, limit.i, wday.i)
 	If ListSize(alerts()\months()) = 0
-		MainWindowUpdateAlertEtaWDays(now, -1)
+		MainWindowUpdateAlertEtaDays(now, limit * 12, wday, -1)
 	Else
 		ForEach alerts()\months()
-			MainWindowUpdateAlertEtaWDays(now, alerts()\months())
+			MainWindowUpdateAlertEtaDays(now, limit, wday, alerts()\months())
+		Next
+	EndIf
+EndProcedure
+
+
+; Convert the given cron alert values to a time prediction from now.
+; The weekdays value will be replaced accordingly.
+; 
+; @param[in] now - current time
+; @return time duration until next trigger
+Procedure.i MainWindowUpdateAlertEtaWDays(now.i)
+	If ListSize(alerts()\wdays()) = 0
+		MainWindowUpdateAlertEtaMonths(now, 7, -1)
+	Else
+		ForEach alerts()\wdays()
+			MainWindowUpdateAlertEtaMonths(now, 1, alerts()\wdays())
 		Next
 	EndIf
 EndProcedure
@@ -722,12 +719,18 @@ EndProcedure
 ; Update values in the main window.
 ; Especially trigger values are updated.
 Procedure.i MainWindowRefresh()
+	Static.i lastTime = -1
 	Protected localTimezone.TIME_ZONE_INFORMATION
-	Protected.i currentTime = Date(), minDiff, splitPos
+	Protected.i currentTime = Date(), timezoneTime, minDiff, splitPos
 	Protected.s dateTimeStr, aNextEvent, aNextEta, cmdPart, parmPart
 	Protected NewList preTriggers.s()
 	Protected NewList triggers.s()
 	Protected textOutput.s
+	; update only once per second
+	If lastTime = currentTime
+		ProcedureReturn
+	EndIf
+	lastTime = currentTime
 	GetTimeZoneInformation_(@localTimezone)
 	dateTimeStr = FormatDate("%yyyy-%mm-%dd %hh:%ii:%ss", currentTime)
 	If localTimezone\Bias > 0
@@ -741,16 +744,26 @@ Procedure.i MainWindowRefresh()
 	aNextEvent = ""
 	aNextEta = ""
 	ForEach alerts()
-		alerts()\eta = -1
-		MainWindowUpdateAlertEtaMonths(currentTime + ((localTimezone\Bias + alerts()\timezone) * 60))
-		If alerts()\eta = -1
+		timezoneTime = currentTime + ((localTimezone\Bias + alerts()\timezone) * 60)
+		If alerts()\state = #AlertState_Init Or (alerts()\state = #AlertState_Triggered And alerts()\eta <= 0)
+			alerts()\eta = -1
+			alerts()\nextTrigger = -1
+			alerts()\state = #AlertState_Idle
+			If alerts()\type = #AlertType_Audio
+				SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudio))
+			EndIf
+			MainWindowUpdateAlertEtaWDays(timezoneTime)
+		ElseIf alerts()\nextTrigger <> -1
+			alerts()\eta = alerts()\nextTrigger - timezoneTime
+		EndIf
+		If alerts()\nextTrigger = -1
 			SetGadgetItemText(#GID_AlertList, ListIndex(alerts()), "n/a", #CID_AlertList_ETA)
 		ElseIf alerts()\eta > 604800
 			SetGadgetItemText(#GID_AlertList, ListIndex(alerts()), ">1 week", #CID_AlertList_ETA)
 		Else
 			SetGadgetItemText(#GID_AlertList, ListIndex(alerts()), StrTime(alerts()\eta), #CID_AlertList_ETA)
 		EndIf
-		If alerts()\eta <> -1
+		If alerts()\nextTrigger <> -1
 			If alerts()\enabled
 				If alerts()\eta < minDiff Or minDiff = -1
 					minDiff = alerts()\eta
@@ -760,7 +773,7 @@ Procedure.i MainWindowRefresh()
 					aNextEvent + ", " + alerts()\name
 				EndIf
 			EndIf
-			If alerts()\preAlert > 0 And alerts()\eta <= alerts()\preAlert And alerts()\eta > alerts()\preTrigger And Not alerts()\preAlertTriggered
+			If alerts()\preAlert > 0 And alerts()\eta <= alerts()\preAlert And alerts()\eta > alerts()\preTrigger And Not alerts()\state = #AlertState_PreTriggered
 				If alerts()\enabled
 					AddElement(preTriggers())
 					preTriggers() = alerts()\name
@@ -768,14 +781,13 @@ Procedure.i MainWindowRefresh()
 						SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudioAlert))
 					EndIf
 				EndIf
-				alerts()\preAlertTriggered = #True
-			ElseIf alerts()\eta <= alerts()\preTrigger And Not alerts()\triggered
+				alerts()\state = #AlertState_PreTriggered
+			ElseIf alerts()\eta <= alerts()\preTrigger And Not alerts()\state = #AlertState_Triggered
 				If alerts()\enabled
 					Select alerts()\type
 					Case #AlertType_Audio
 						AddElement(triggers())
 						triggers() = alerts()\text
-						SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudio))
 					Case #AlertType_Command
 						parmPart = ""
 						If Left(alerts()\text, 1) = ~"\""
@@ -798,10 +810,7 @@ Procedure.i MainWindowRefresh()
 						RunProgram(cmdPart, parmPart, GetPathPart(openFile))
 					EndSelect
 				EndIf
-				alerts()\triggered = #True
-				alerts()\preAlertTriggered = #False
-			ElseIf alerts()\eta > alerts()\preTrigger
-				alerts()\triggered = #False
+				alerts()\state = #AlertState_Triggered
 			EndIf
 		EndIf
 	Next
@@ -906,6 +915,8 @@ Procedure.i MainWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
 			*lprc\bottom = *lprc\top + #WinMinHeight + windowYDif
 			UpdateWindow_(hWnd)
 		EndIf
+	Case #WM_DISPLAYCHANGE
+		CheckWindowPosition(#WID_Main)
 	EndSelect
 	ProcedureReturn result
 EndProcedure
@@ -1063,8 +1074,8 @@ DataSection
 	IconDataCommandEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 76
-; FirstLine = 54
+; CursorPosition = 367
+; FirstLine = 356
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

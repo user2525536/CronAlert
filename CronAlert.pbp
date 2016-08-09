@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2016-08-08 22:27" user="pcfreak" host="D4"/>
+    <lastopen date="2016-08-09 18:38" user="pcfreak" host="D4"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
@@ -17,7 +17,7 @@
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="a1f7706322f93fb15c91ea3b471864b8"/>
+      <fingerprint md5="ef525c051aac8cf0621ce464fc193159"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -41,7 +41,7 @@
     </file>
     <file name="src\Utility.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="0ad2dcdbad371f5aa10a3a579df7c0f7"/>
+      <fingerprint md5="232bce4f70d188d2e087fe65707ea8d8"/>
     </file>
     <file name="src\WinComApi.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -62,12 +62,12 @@
       <options unicode="1" thread="1" xpskin="1"/>
       <icon enable="1">etc\main.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1,1,3,0"/>
-        <field1 value="1,1,3,0"/>
+        <field0 value="1,1,4,0"/>
+        <field1 value="1,1,4,0"/>
         <field2 value="pcfreak"/>
         <field3 value="CronAlert"/>
-        <field4 value="1.1.3"/>
-        <field5 value="1.1.3"/>
+        <field4 value="1.1.4"/>
+        <field5 value="1.1.4"/>
         <field6 value="CronAlert"/>
         <field7 value="CronAlert"/>
         <field8 value="CronAlert"/>

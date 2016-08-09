@@ -46,6 +46,14 @@ Enumeration ; Alert Types
 EndEnumeration
 
 
+Enumeration ; Alert States
+	#AlertState_Init
+	#AlertState_Idle
+	#AlertState_PreTriggered
+	#AlertState_Triggered
+EndEnumeration
+
+
 Enumeration ; Date Time Number Types
 	#DTNT_Number
 	#DTNT_Month
@@ -54,7 +62,7 @@ EndEnumeration
 
 
 #UserConfig = "CronAlert\settings.dat"
-#PreTriggerTime = 2 ; in seconds (should be >0 to cope with different update intervals for the timer and the system clock)
+#PreTriggerTime = 2 ; in seconds
 
 
 Structure CronAlert
@@ -63,7 +71,7 @@ Structure CronAlert
 	eta.i ; in seconds
 	preAlert.i ; in seconds
 	preTrigger.i ; in seconds
-	preAlertTriggered.i ; boolean
+	nextTrigger.i ; date time
 	List mins.i()
 	List hours.i()
 	List wdays.i()
@@ -71,7 +79,7 @@ Structure CronAlert
 	List months.i()
 	name.s
 	text.s
-	triggered.i ; date time
+	state.i ; alert state
 	enabled.i ; boolean
 	line.i
 EndStructure
@@ -88,6 +96,8 @@ Declare.s GetUserConfigPath()
 Declare.s StrTime(Seconds.q)
 Declare.i FileIcon(file.s, small.i = #False)
 Declare.i SetStatusBarWidth(statusBar.i, item.i, width.i)
+Declare.i PointInRect(*rect.RECT, *point.POINT)
+Declare.i CheckWindowPosition(window.i)
 Declare.i SkipBlanks(parser.ITextParser)
 Declare.i SkipComment(parser.ITextParser)
 Declare.i ParseCharSkipped(parser.ITextParser, char.u, *error.String)
@@ -223,12 +233,10 @@ EndProcedure
 ;
 ; @param[in] Seconds - duration in seconds to convert
 ; @return string representation of the given duration
-; @remarks Negative values are converted to "inf".
+; @remarks Negative values and 0 are converted to "now".
 Procedure.s StrTime(Seconds.q)
 	Protected Result$ = ""
-	If Seconds < 0
-		Result$ = "inf"
-	ElseIf Seconds = 0
+	If Seconds <= 0
 		Result$ = "now"
 	ElseIf Seconds <= 60
 		Result$ = Str(Seconds) + "s"
@@ -297,6 +305,79 @@ Procedure.i SetStatusBarWidth(statusBar.i, item.i, width.i)
 		EndIf
 	EndIf
 	ProcedureReturn #False
+EndProcedure
+
+
+; Checks if the given point is within the passed rectangle.
+; 
+; @param[in] *rect - rectangle to be in
+; @param[in] *point - point to check
+; @return true if within, else false
+Procedure.i PointInRect(*rect.RECT, *point.POINT)
+	If *point\x < *rect\left Or *point\x > *rect\right Or *point\y < *rect\top Or *point\y > *rect\bottom
+		ProcedureReturn #False
+	EndIf
+	ProcedureReturn #True
+EndProcedure
+
+
+; Checks if the given window is off-screen and corrects its
+; position.
+;
+; @param[in] window - window ID
+Procedure.i CheckWindowPosition(window.i)
+	Protected.i i, count, isWithin = #False, needAdjustment = #False
+	Protected.i winWidth, winHeight
+	Protected.RECT win, desktop, desktop0
+	Protected.POINT winTop, winBottom
+	winWidth = WindowWidth(window, #PB_Window_FrameCoordinate)
+	winHeight = WindowHeight(window, #PB_Window_FrameCoordinate)
+	win\left = WindowX(window)
+	win\top = WindowY(window)
+	win\right = win\left + winWidth
+	win\bottom = win\top + winHeight
+	winTop\x = win\left
+	winTop\y = win\top
+	winBottom\x = win\right
+	winBottom\y = win\bottom
+	count = ExamineDesktops()
+	For i = 0 To count - 1
+		desktop\left = DesktopX(i)
+		desktop\top = DesktopY(i)
+		desktop\right = desktop\left + DesktopWidth(i)
+		desktop\bottom = desktop\top + DesktopHeight(i)
+		If i = 0
+			CopyStructure(@desktop, @desktop0, RECT)
+		EndIf
+		If PointInRect(@desktop, @winTop)
+			If PointInRect(@desktop, @winBottom)
+				isWithin = #True
+				Break
+			Else
+				needAdjustment = #True
+			EndIf
+		ElseIf PointInRect(@desktop, @winBottom)
+			needAdjustment = #True
+		EndIf
+		If needAdjustment
+			If desktop\right < win\right
+				win\left = desktop\right - winWidth
+			ElseIf desktop\left > win\left
+				win\left = desktop\left
+			EndIf
+			If desktop\bottom < win\bottom
+				win\top = desktop\bottom - winHeight
+			ElseIf desktop\top > win\top
+				win\top = desktop\top
+			EndIf
+			ResizeWindow(window, win\left, win\top, #PB_Ignore, #PB_Ignore)
+			isWithin = #True
+			Break
+		EndIf
+	Next
+	If Not isWithin
+		ResizeWindow(window, ((desktop0\right - desktop0\left - winWidth) / 2) + desktop0\left, ((desktop0\bottom - desktop0\top - winHeight) / 2) + desktop0\top, #PB_Ignore, #PB_Ignore)
+	EndIf
 EndProcedure
 
 
@@ -663,7 +744,8 @@ Procedure.s LoadCronAlertFile(file.s)
 			item\preAlert = preAlert
 			item\preTrigger = preTrigger
 			item\timezone = timezone
-			item\triggered = 0
+			item\state = #AlertState_Init
+			item\nextTrigger = -1
 			item\enabled = #True
 			item\line = -1
 			aStr\s = "" ; initialize string
@@ -790,8 +872,8 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 414
-; FirstLine = 380
+; CursorPosition = 326
+; FirstLine = 347
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
