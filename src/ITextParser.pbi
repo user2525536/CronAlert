@@ -83,14 +83,14 @@ Interface ITextParser
 	Eoi.i()
 	Boolean.i(*out.Integer = #Null)
 	BooleanVal.i(check.i, *out.Integer = #Null)
-	Num.i(*out.Integer = #Null)
-	NumQ.i(*out.Quad = #Null)
-	NumF.i(*out.Float = #Null)
-	NumD.i(*out.Double = #Null)
-	NumVal.i(check.i, *out.Integer = #Null)
-	NumQVal.i(check.q, *out.Quad = #Null)
-	NumFVal.i(check.f, *out.Float = #Null)
-	NumDVal.i(check.d, *out.Double = #Null)
+	Num.i(*out.Integer = #Null, signed.i = #True)
+	NumQ.i(*out.Quad = #Null, signed.i = #True)
+	NumF.i(*out.Float = #Null, signed.i = #True)
+	NumD.i(*out.Double = #Null, signed.i = #True)
+	NumVal.i(check.i, *out.Integer = #Null, signed.i = #True)
+	NumQVal.i(check.q, *out.Quad = #Null, signed.i = #True)
+	NumFVal.i(check.f, *out.Float = #Null, signed.i = #True)
+	NumDVal.i(check.d, *out.Double = #Null, signed.i = #True)
 	NumHex.i(*out.Integer = #Null)
 	NumQHex.i(*out.Quad = #Null)
 	NumHexVal.i(check.i, *out.Integer = #Null)
@@ -114,7 +114,8 @@ EndDeclareModule ; ITextParser
 Module ITextParser
 EndModule ; ITextParser
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 93
+; FirstLine = 32
 ; Folding = -
 ; EnableUnicode
 ; EnableXP

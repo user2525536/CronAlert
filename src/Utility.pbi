@@ -94,6 +94,7 @@ Declare.i WriteStringL(fileId.i, string.s, format.i = #PB_UTF8)
 Declare.s ReadStringL(fileId.i, format.i = #PB_UTF8)
 Declare.s GetUserConfigPath()
 Declare.s StrTime(Seconds.q)
+Declare.s RemoveXml(string.s)
 Declare.i FileIcon(file.s, small.i = #False)
 Declare.i SetStatusBarWidth(statusBar.i, item.i, width.i)
 Declare.i PointInRect(*rect.RECT, *point.POINT)
@@ -259,6 +260,45 @@ Procedure.s StrTime(Seconds.q)
 		EndIf
 	EndIf
 	ProcedureReturn Result$
+EndProcedure
+
+
+; Removes XML tags from the given string.
+;
+; @param[in] string  - string to clean-up
+; @return passed string without XML tags
+Procedure.s RemoveXml(string.s)
+	Protected.s result = string
+	Protected.CHARACTER *in, *out
+	Protected.i hasTagOpen, hasStringOpen
+	*in = @string
+	*out = @result
+	hasTagOpen = #False
+	hasStringOpen = #False
+	While *in\c <> 0
+		Select *in\c
+		Case '<'
+			hasTagOpen = #True
+		Case '>'
+			If Not hasStringOpen
+				hasTagOpen = #False
+			EndIf
+		Case '"', 39 ; '
+			If hasStringOpen
+				hasStringOpen = #False
+			Else
+				hasStringOpen = #True
+			EndIf
+		Default
+			If Not hasTagOpen
+				*out\c = *in\c
+				*out + SizeOf(CHARACTER)
+			EndIf
+		EndSelect
+		*in + SizeOf(CHARACTER)
+	Wend
+	*out\c = 0
+	ProcedureReturn PeekS(@result)
 EndProcedure
 
 
@@ -468,7 +508,7 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 		If parser\CharVal('*')
 			result = #True
 			If ParseCharSkipped(parser, '/', *error)
-				If parser\Num(@steps)
+				If parser\Num(@steps, #False)
 					If steps < minVal Or steps > maxVal Or steps < 1
 						result = #False
 						If minVal < 1
@@ -485,14 +525,14 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 						Wend
 					EndIf
 				Else
-					*error\s = GetLineInfo(parser) + ": Expected <number> here."
+					*error\s = GetLineInfo(parser) + ": Expected <unsigned number> here."
 				EndIf
 			Else
 				If *error\s <> ""
 					Break
 				EndIf
 			EndIf
-		ElseIf parser\Num(@number) Or (type = #DTNT_Month And parser\MatchI(months(), 12, @number)) Or (type = #DTNT_Weekday And parser\MatchI(weekdays(), 7, @number))
+		ElseIf parser\Num(@number, #False) Or (type = #DTNT_Month And parser\MatchI(months(), 12, @number)) Or (type = #DTNT_Weekday And parser\MatchI(weekdays(), 7, @number))
 			If number < minVal Or number > maxVal
 				*error\s = GetLineInfo(parser) + ": Given number is out of range. Allowed interval is [" + Str(minVal) + "; " + Str(maxVal) + "]."
 				Break
@@ -504,14 +544,14 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 			Repeat
 				If ParseCharSkipped(parser, '-', *error)
 					lastNumber = number
-					If parser\Num(@number) Or (type = #DTNT_Month And parser\MatchI(months(), 12, @number)) Or (type = #DTNT_Weekday And parser\MatchI(weekdays(), 7, @number))
+					If parser\Num(@number, #False) Or (type = #DTNT_Month And parser\MatchI(months(), 12, @number)) Or (type = #DTNT_Weekday And parser\MatchI(weekdays(), 7, @number))
 						If number < minVal Or number > maxVal
 							result = #False
 							parseMore = #False
 							*error\s = GetLineInfo(parser) + ": Given number is out of range. Allowed interval is [" + Str(minVal) + "; " + Str(maxVal) + "]."
 						Else
 							If ParseCharSkipped(parser, '/', *error)
-								If parser\Num(@steps)
+								If parser\Num(@steps, #False)
 									If steps < minVal Or steps > maxVal Or steps < 1
 										result = #False
 										parseMore = #False
@@ -529,7 +569,7 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 										Wend
 									EndIf
 								Else
-									*error\s = GetLineInfo(parser) + ": Expected <number> here."
+									*error\s = GetLineInfo(parser) + ": Expected <unsigned number> here."
 								EndIf
 							Else
 								If *error\s <> ""
@@ -545,7 +585,7 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 					Else
 						result = #False
 						parseMore = #False
-						*error\s = GetLineInfo(parser) + ": Expected <number> here."
+						*error\s = GetLineInfo(parser) + ": Expected <unsigned number> here."
 					EndIf
 				Else
 					If *error\s <> ""
@@ -555,7 +595,7 @@ Procedure.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, ma
 				EndIf
 			Until Not parseMore
 		Else
-			*error\s = GetLineInfo(parser) + ": Expected '*' or <number> here."
+			*error\s = GetLineInfo(parser) + ": Expected '*' or <unsigned number> here."
 		EndIf
 	Until Not ParseCharSkipped(parser, ',', *error)
 	; remove duplicates
@@ -692,16 +732,19 @@ Procedure.s LoadCronAlertFile(file.s)
 						result\s = "Failed to allocate memory."
 						Break
 					EndIf
-					If parser\CharVal(':') And parser\Num(@number)
-						timezone = (timezone * 60) + number
-						If number < 0
+					If parser\CharVal(':')
+						If parser\Num(@number, #False)
+							timezone = (timezone * 60) + number
+						Else
 							parser\SetStartIterator(savedIt)
-							result\s = GetLineInfo(parser) + ~": Expected positive <number> after ':'."
-							Break
+							result\s = GetLineInfo(parser) + ~": Expected <unsigned number> after ':'."
 						EndIf
 						savedIt\Delete()
 					Else
 						parser\SetStartIterator(savedIt)
+						If result\s <> ""
+							Break
+						EndIf
 					EndIf
 				Else
 					result\s = GetLineInfo(parser) + ~": Expected 'local' or timezone as <number> here.\nNote: Value in minutes offset to UTC."
@@ -709,27 +752,65 @@ Procedure.s LoadCronAlertFile(file.s)
 				EndIf
 			ElseIf parser\String("preAlert")
 				SkipBlanks(parser)
-				If parser\String("off") Or parser\NumVal(0)
+				If parser\String("off") Or parser\NumVal(0, #False)
 					; disable preAlert
 					preAlert = 0
-				ElseIf parser\Num(@preAlert)
-					; set preAlert time in seconds
+				ElseIf parser\Num(@preAlert, #False)
+					; set preAlert in seconds or try to get as 00:00
+					savedIt = parser\CloneStartIterator()
+					If savedIt = #Null
+						result\s = "Failed to allocate memory."
+						Break
+					EndIf
+					If parser\CharVal(':')
+						If parser\Num(@number, #False)
+							preAlert = (preAlert * 60) + number
+						Else
+							parser\SetStartIterator(savedIt)
+							result\s = GetLineInfo(parser) + ~": Expected <unsigned number> after ':'."
+						EndIf
+						savedIt\Delete()
+					Else
+						parser\SetStartIterator(savedIt)
+						If result\s <> ""
+							Break
+						EndIf
+					EndIf
 				Else
-					result\s = GetLineInfo(parser) + ~": Expected 'off' or <number> here.\nNote: Value in seconds to be triggered before the actual event."
+					result\s = GetLineInfo(parser) + ~": Expected 'off' or <unsigned number> here.\nNote: Value in seconds to be triggered before the actual event."
 					Break
 				EndIf
 			ElseIf parser\String("preTrigger")
 				SkipBlanks(parser)
-				If parser\String("off") Or parser\NumVal(0)
+				If parser\String("off") Or parser\NumVal(0, #False)
 					; disable preTrigger
 					preTrigger = 0
 				ElseIf parser\String("default")
 					; default preTrigger
 					preTrigger = #PreTriggerTime
-				ElseIf parser\Num(@preTrigger)
-					; set preTrigger time in seconds
+				ElseIf parser\Num(@preTrigger, #False)
+					; set preTrigger in seconds or try to get as 00:00
+					savedIt = parser\CloneStartIterator()
+					If savedIt = #Null
+						result\s = "Failed to allocate memory."
+						Break
+					EndIf
+					If parser\CharVal(':')
+						If parser\Num(@number, #False)
+							preTrigger = (preTrigger * 60) + number
+						Else
+							parser\SetStartIterator(savedIt)
+							result\s = GetLineInfo(parser) + ~": Expected <unsigned number> after ':'."
+						EndIf
+						savedIt\Delete()
+					Else
+						parser\SetStartIterator(savedIt)
+						If result\s <> ""
+							Break
+						EndIf
+					EndIf
 				Else
-					result\s = GetLineInfo(parser) + ~": Expected 'off', 'default' or <number> here.\nNote: Value in seconds to be triggered before the actual event."
+					result\s = GetLineInfo(parser) + ~": Expected 'off', 'default' or <unsigned number> here.\nNote: Value in seconds to be triggered before the actual event."
 					Break
 				EndIf
 			Else
@@ -872,8 +953,8 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 326
-; FirstLine = 347
+; CursorPosition = 258
+; FirstLine = 251
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

@@ -116,6 +116,8 @@ Declare.i DeInitialize()
 Declare.i GetClassId()
 Declare.i GetInterfaceId()
 Declare.i Speak(text.s, async.i = #False)
+Declare.i GetVolume()
+Declare.i SetVolume(value.i)
 
 EndDeclareModule ; TextToSpeech
 
@@ -125,6 +127,7 @@ UseModule WinComApi
 
 
 Global pVoice.ISpVoice
+Global pVoiceInitialized.i
 
 
 ; Initializes the text-to-speech interface.
@@ -175,11 +178,43 @@ EndProcedure
 ; @param[in] async - set true to dispatch the voice output (default: false)
 ; @return #True on success, #False if Text-To-Speech API could not be initialized.
 Procedure.i Speak(text.s, async.i = #False)
-	Initialize()
-	If async = #True
+	If Not Initialize()
+		ProcedureReturn #False
+	EndIf
+	If async = #False ; seems that it is only asynchronous if set to default 
 		pVoice\Speak(text, #SPF_ASYNC, #Null)
 	Else
 		pVoice\Speak(text, #SPF_DEFAULT, #Null)
+	EndIf
+	ProcedureReturn #True
+EndProcedure
+
+
+; Returns the currently set volume.
+; 
+; @return volume or -1 on error
+Procedure.i GetVolume()
+	Protected.u val
+	If Not Initialize()
+		ProcedureReturn -1
+	EndIf
+	If pVoice\GetVolume(@val) <> #S_OK
+		ProcedureReturn -1
+	EndIf
+	ProcedureReturn val & $FFFF
+EndProcedure
+
+
+; Sets a new volume value.
+; 
+; @param[in] value - new volume
+; @return #True on success, #False on error
+Procedure.i SetVolume(value.i)
+	If Not Initialize()
+		ProcedureReturn #False
+	EndIf
+	If pVoice\SetVolume(value) <> #S_OK
+		ProcedureReturn #False
 	EndIf
 	ProcedureReturn #True
 EndProcedure
@@ -195,7 +230,8 @@ DefineGuid(IID_ISpVoice, $6C44DF74, $72B9, $4992, $A1, $EC, $EF, $99, $6E, $04, 
 
 EndModule ; TextToSpeech
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 137
+; FirstLine = 106
 ; Folding = --
 ; EnableUnicode
 ; EnableXP

@@ -38,13 +38,19 @@ XIncludeFile "Utility.pbi"
 
 Enumeration ; Windows
 	#WID_Main
+	#WID_VolumneRequester
 EndEnumeration
 
 
 Enumeration ; Gadgets
- 	#GID_CurrentTimeLabel
  	#GID_CurrentTimeValue
+ 	#GID_CurrentTimeLabel
  	#GID_AlertList
+ 	#GID_VolumeLabel
+ 	#GID_VolumeBar
+ 	#GID_VolumeTest
+ 	#GID_VolumeOk
+ 	#GID_VolumeCancel
 EndEnumeration
 
 
@@ -76,6 +82,7 @@ Enumeration ; Menu Items
  	#MIID_Exit
  	#MIID_VolumeCheck
  	#MIID_Mute
+ 	#MIID_ChangeVolume
  	#MIID_About
 EndEnumeration
 
@@ -102,8 +109,9 @@ EndEnumeration
 #WinMinHeight = 240
 #MinUpdateInterval = 5 ; seconds
 #ConfigFileVersion1 = $CA000001
-#ConfigFileVersion = #ConfigFileVersion1
-#Version = "1.1.3"
+#ConfigFileVersion2 = $CA000002
+#ConfigFileVersion = #ConfigFileVersion2
+#Version = "1.2.0"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -131,7 +139,7 @@ Global.i WM_TASKBARCREATED
 Global.s mainWindowTitle = "CronAlert"
 Global.s nextEvent = "", nextEta = "", clParam
 Global.i icon = FileIcon(ProgramFilename(), #True)
-Global.i isMuted = #False, mainWindowIsHidden = #False, loadLastFile = #False
+Global.i isMuted = #False, volume = 100, mainWindowIsHidden = #False, loadLastFile = #False
 Global.s openFile = ProgramFilename(), openFileMd5 = ""
 Global.s lastOpenFile = ""
 Global.i hasOpenFile = #False, openFileModDate = 0, hasLastFile = #False, reloadOnChange = #True, fileWasChanged = #False
@@ -160,12 +168,14 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 		MenuItem(#MIID_Exit, "&Exit")
 		MenuTitle("&Sound")
 		MenuItem(#MIID_VolumeCheck, "&Volume check")
+		MenuItem(#MIID_ChangeVolume, "&Change volume")
 		MenuItem(#MIID_Mute, "&Mute")
 		MenuTitle("&Help")
 		MenuItem(#MIID_About, "&About")
 	EndIf
 	If CreatePopupMenu(#MID_SysTray)
 		MenuItem(#MIID_Mute, "&Mute")
+		MenuItem(#MIID_ChangeVolume, "&Change volume")
 		MenuBar()
 		MenuItem(#MIID_Exit, "&Exit")
 	EndIf
@@ -190,6 +200,18 @@ Else
 EndIf
 
 
+If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
+ 	TrackBarGadget(#GID_VolumeBar, 10, 20, 170, 20, 0, 100)
+	TextGadget(#GID_VolumeLabel, 190, 23, 40, 14, "-%")
+ 	ButtonGadget(#GID_VolumeTest, 230, 20, 60, 20, "Test")
+ 	ButtonGadget(#GID_VolumeOk, 160, 60, 60, 20, "OK", #PB_Button_Default)
+ 	ButtonGadget(#GID_VolumeCancel, 230, 60, 60, 20, "Cancel")
+Else
+	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	ExitProgram()
+EndIf
+
+
 GetWindowRect_(WindowID(#WID_Main), winRect.rect)
 windowXDif = winRect\right - winRect\left - WindowWidth(#WID_Main)
 windowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Main)
@@ -204,6 +226,7 @@ SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
 WM_TASKBARCREATED = RegisterWindowMessage_("TaskbarCreated")
 
 TextToSpeech::Initialize()
+volume = TextToSpeech::GetVolume()
 
 ; handle user settings
 MainWindowLoadUserConfig()
@@ -277,6 +300,21 @@ Repeat
 					EndIf
 				Next
 			EndSelect
+		Case #GID_VolumeBar
+			SetGadgetText(#GID_VolumeLabel, Str(GetGadgetState(#GID_VolumeBar)) + "%")
+		Case #GID_VolumeTest
+			i = GetGadgetState(#GID_VolumeBar)
+			TextToSpeech::SetVolume(i)
+			TextToSpeech::Speak("test volume", #False)
+			TextToSpeech::SetVolume(volume)
+		Case #GID_VolumeOk
+			volume = GetGadgetState(#GID_VolumeBar)
+			TextToSpeech::SetVolume(volume)
+			HideWindow(#WID_VolumneRequester, #True)
+			DisableWindow(#WID_Main, #False)
+		Case #GID_VolumeCancel
+			HideWindow(#WID_VolumneRequester, #True)
+			DisableWindow(#WID_Main, #False)
 		EndSelect
 	Case #PB_Event_Menu
 		Select EventMenu()
@@ -309,7 +347,7 @@ Repeat
 			TextToSpeech::DeInitialize()
 			ExitProgram()
 		Case #MIID_VolumeCheck
-			TextToSpeech::Speak("this is a volume check")
+			TextToSpeech::Speak("this is a volume check", #True)
 		Case #MIID_Mute
 			If isMuted
 				isMuted = #False
@@ -318,6 +356,15 @@ Repeat
 			EndIf
 			SetMenuItemState(#MID_Main, #MIID_Mute, isMuted)
 			SetMenuItemState(#MID_SysTray, #MIID_Mute, isMuted)
+		Case #MIID_ChangeVolume
+			SetGadgetState(#GID_VolumeBar, volume)
+			SetGadgetText(#GID_VolumeLabel, Str(volume) + "%")
+			DisableWindow(#WID_Main, #True)
+			ResizeWindow(#WID_VolumneRequester,
+				WindowX(#WID_Main) + (WindowWidth(#WID_Main) - WindowWidth(#WID_VolumneRequester)) / 2,
+				WindowY(#WID_Main) + (WindowHeight(#WID_Main) - WindowHeight(#WID_VolumneRequester)) / 2,
+				#PB_Ignore, #PB_Ignore)
+			HideWindow(#WID_VolumneRequester, #False)
 		Case #MIID_About
 			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
 		EndSelect
@@ -368,7 +415,8 @@ Procedure.i MainWindowLoadUserConfig()
 	fileId = ReadFile(#PB_Any, GetUserConfigPath() + #UserConfig)
 	If IsFile(fileId)
 		version = BSwap32(ReadLong(fileId) & $FFFFFFFF)
-		If version = #ConfigFileVersion1
+		Select version
+		Case #ConfigFileVersion1, #ConfigFileVersion2
 			winState = ReadLong(fileId) & $FFFFFFFF
 			winX = ReadLong(fileId) & $FFFFFFFF
 			winY = ReadLong(fileId) & $FFFFFFFF
@@ -378,6 +426,15 @@ Procedure.i MainWindowLoadUserConfig()
 			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_ETA, ReadLong(fileId) & $FFFFFFFF)
 			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_Name, ReadLong(fileId) & $FFFFFFFF)
 			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_Text, ReadLong(fileId) & $FFFFFFFF)
+			If version = #ConfigFileVersion2
+				If ReadByte(fileId) <> 0
+					isMuted = #True
+				Else
+					isMuted = #False
+				EndIf
+				volume = ReadWord(fileId)
+				TextToSpeech::SetVolume(volume)
+			EndIf
 			loadLastFile = ReadByte(fileId) & $FF
 			reloadOnChange = ReadByte(fileId) & $FF
 			lastFile = ReadStringL(fileId)
@@ -393,13 +450,12 @@ Procedure.i MainWindowLoadUserConfig()
 				EndIf
 				mainWindowIsHidden = #False
 			EndIf
-			HideWindow(#WID_Main, mainWindowIsHidden)
 			If loadLastFile = #True And openFile <> ""
 				hasOpenFile = #True
 			EndIf
 			MainWindowUpdateSizes()
 			MainWindowResizeGadgets()
-		EndIf
+		EndSelect
 		CloseFile(fileId)
 	Else
 		MessageRequester("Error", "Failed to read user configuration file.\n" + GetUserConfigPath() + #UserConfig, #PB_MessageRequester_Ok | #MB_ICONERROR)
@@ -456,6 +512,8 @@ Procedure.i MainWindowSaveUserConfig()
 		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_ETA, 0))
 		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_Name, 0))
 		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_Text, 0))
+		WriteByte(fileId, isMuted)
+		WriteWord(fileId, volume)
 		WriteByte(fileId, loadLastFile)
 		WriteByte(fileId, reloadOnChange)
 		WriteStringL(fileId, lastOpenFile)
@@ -861,7 +919,7 @@ Procedure.i MainWindowRefresh()
 		textOutput + "."
 	EndIf
 	If textOutput <> "" And Not isMuted
-		TextToSpeech::Speak(textOutput)
+		TextToSpeech::Speak(textOutput, #True)
 	EndIf
 EndProcedure
 
@@ -1000,7 +1058,7 @@ EndProcedure
 ;
 ; @param[in] file - load this file
 Procedure.i MainWindowLoadCronAlert(file.s)
-	Protected.s openFileError
+	Protected.s openFileError, text
 	Protected.i itemIcon
 	openFileError = LoadCronAlertFile(file)
 	hasOpenFile = #False
@@ -1015,16 +1073,18 @@ Procedure.i MainWindowLoadCronAlert(file.s)
 		SetWindowTitle(#WID_Main, mainWindowTitle + " - " + openFile)
 		ClearGadgetItems(#GID_AlertList)
 		ForEach alerts()
+			text = alerts()\text
 			Select alerts()\type
 			Case #AlertType_Audio
 				itemIcon = iconAudio
+				text = RemoveXml(text)
 			Case #AlertType_Command
 				itemIcon = iconCommand
 			EndSelect
 			If IsImage(itemIcon)
-				AddGadgetItem(#GID_AlertList, -1, Chr(10) + Chr(10) + alerts()\name + Chr(10) + alerts()\text, ImageID(itemIcon))
+				AddGadgetItem(#GID_AlertList, -1, Chr(10) + Chr(10) + RemoveXml(alerts()\name) + Chr(10) + text, ImageID(itemIcon))
 			Else
-				AddGadgetItem(#GID_AlertList, -1, Chr(10) + Chr(10) + alerts()\name + Chr(10) + alerts()\text)
+				AddGadgetItem(#GID_AlertList, -1, Chr(10) + Chr(10) + RemoveXml(alerts()\name) + Chr(10) + text)
 			EndIf
 			If alerts()\enabled
 				SetGadgetItemState(#GID_AlertList, CountGadgetItems(#GID_AlertList) - 1, #PB_ListIcon_Checked)
@@ -1074,8 +1134,8 @@ DataSection
 	IconDataCommandEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 367
-; FirstLine = 356
+; CursorPosition = 1086
+; FirstLine = 1056
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

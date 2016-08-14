@@ -1,3 +1,12 @@
+Version 1.2.0 (2016-08-14)
+ - added: volume control
+ - added: alternative time format for preAlert and preTrigger (as MIN:SEC instead of SEC)
+ - changed: program icon slightly
+ - fixed: lax number parser for alert file parsing
+ - fixed: memory leaks
+ - fixed: window showing for a moment if started with /tray
+ - fixed: list display for SAPI XML strings
+
 Version 1.1.4 (2016-08-09)
  - added: fix window position if last position is off-screen now
  - fixed: error message on startup if open last file option was enabled but no last file available

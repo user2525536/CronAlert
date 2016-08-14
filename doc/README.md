@@ -18,7 +18,7 @@ Command-line Syntax
 
 CronAlert can be started with command-line parameters to perform specific settings or action
 on start-up. The following command-line options can be used.
-
+```
 -h, --help
    Display a short description of command-line options.
 -m, --mute
@@ -27,24 +27,25 @@ on start-up. The following command-line options can be used.
    Start CronAlert in system tray mode.
 <file>
    Open the given CronAlert file on start-up. This option overwrites the load last file option.
-
+```
 
 CronAlert File Format
 =====================
-
 
 The CronAlert file format is similar to Cron (Linux).
 See Cron (https://en.wikipedia.org/wiki/Cron) for reference.
 Each line of a CronAlert file may contain a comment, pragma or CronAlert.
 
-Comment:
+### Comment
 This includes all characters starting from a hash tag or semicolon until the end-of-line or
 end-of-file and will be completely ignored.
-Examples:
+### Examples
+```
 # this is a comment
 ; this is also a comment
+```
 
-Pragma:
+### Pragma
 Every pragma start with an at mark followed by a keyword and optional parameters. A pragma controls
 how following CronAlerts shall be handled. Find next a list of possible pragmas.
 @timezone <number>
@@ -58,14 +59,17 @@ how following CronAlerts shall be handled. Find next a list of possible pragmas.
    Perform the event trigger <number> seconds before the actual trigger event.
    Set <number> to 'off' to disable pre-triggering.
    Set <number> to 'default' to set the value to the program default.
-Examples:
+### Examples
+```
 @timezone -05:00
 @preAlert 15
 @preTrigger 2
+```
 
-CronAlert:
+### CronAlert
 A CronAlert defines a specific event trigger. The event can trigger a program start or a voice
 output. The date/time for the event is defined similar to Cron. See the following explanation.
+```
 min hour day month wday name text
  |   |    |    |    |    |    |
  |   |    |    |    |    |    +---- text for voice output or command to execute
@@ -75,12 +79,13 @@ min hour day month wday name text
  |   |    +------------------------ day of the month from 1 to 31
  |   +----------------------------- hour of the day from 0 to 23
  +--------------------------------- minute of the hour from 0 to 59
+```
 Month can be also on of Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct and Dec.
 Weekday can be also on of Mon, Tue, Wed, Thu, Fri, Sat and Sun.
 The date time values can have additional formats to the numbers to ease setups.
- *           Same as entering every possible value.
- /<number>   Use only every <number> value.
- -<number>   Define a range until <number>.
+|`*`        |Same as entering every possible value.
+|`/<number>`|Use only every `<number>` value.
+|`-<number>`|Define a range until `<number>`.
 Use a hyphen as prefix to a CronAlert to disable it by default.
 The values in name and text field need to be in the surrounded by double quotes.
 The string in the text field will be used for voice output. If text starts with an exclamation mark

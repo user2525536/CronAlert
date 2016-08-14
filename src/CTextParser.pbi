@@ -793,9 +793,10 @@ EndProcedure
 ;
 ; @param[in,out] *obj - object
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i Num(*obj.CTextParserAttributes, *out.Integer = #Null)
+Procedure.i Num(*obj.CTextParserAttributes, *out.Integer = #Null, signed.i = #True)
 	Protected.i numSign, numVal
 	Protected.i result
 	Protected.IIteratorC *it
@@ -806,14 +807,16 @@ Procedure.i Num(*obj.CTextParserAttributes, *out.Integer = #Null)
 	EndIf
 	; parse sign
 	numSign = 1
-	Select *it\GetValue()
-	Case '+'
-		numSign = 1
-		*it\Forward()
-	Case '-'
-		numSign = -1
-		*it\Forward()
-	EndSelect
+	If signed
+		Select *it\GetValue()
+		Case '+'
+			numSign = 1
+			*it\Forward()
+		Case '-'
+			numSign = -1
+			*it\Forward()
+		EndSelect
+	EndIf
 	; parse leading zeros
 	result = #False
 	While Not *it\Equal(*obj\End) And *it\GetValue() = '0'
@@ -848,9 +851,10 @@ EndProcedure
 ;
 ; @param[in,out] *obj - object
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumQ(*obj.CTextParserAttributes, *out.Quad = #Null)
+Procedure.i NumQ(*obj.CTextParserAttributes, *out.Quad = #Null, signed.i = #True)
 	Protected.q numSign, numVal
 	Protected.i result
 	Protected.IIteratorC *it
@@ -861,14 +865,16 @@ Procedure.i NumQ(*obj.CTextParserAttributes, *out.Quad = #Null)
 	EndIf
 	; parse sign
 	numSign = 1
-	Select *it\GetValue()
-	Case '+'
-		numSign = 1
-		*it\Forward()
-	Case '-'
-		numSign = -1
-		*it\Forward()
-	EndSelect
+	If signed
+		Select *it\GetValue()
+		Case '+'
+			numSign = 1
+			*it\Forward()
+		Case '-'
+			numSign = -1
+			*it\Forward()
+		EndSelect
+	EndIf
 	; parse leading zeros
 	result = #False
 	While Not *it\Equal(*obj\End) And (*it\GetValue() = '0' Or (*obj\NumSep <> 0 And *it\GetValue() = *obj\NumSep))
@@ -903,9 +909,10 @@ EndProcedure
 ;
 ; @param[in,out] *obj - object
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumF(*obj.CTextParserAttributes, *out.Float = #Null)
+Procedure.i NumF(*obj.CTextParserAttributes, *out.Float = #Null, signed.i = #True)
 	Protected.i numSign, numVal, numDigits, digits, expSign, expVal
 	Protected.i result, hasExp
 	Protected.IIteratorC *it, *expIt
@@ -920,14 +927,16 @@ Procedure.i NumF(*obj.CTextParserAttributes, *out.Float = #Null)
 	expSign = 1
 	expVal = 0
 	hasExp = #False
-	Select *it\GetValue()
-	Case '+'
-		numSign = 1
-		*it\Forward()
-	Case '-'
-		numSign = -1
-		*it\Forward()
-	EndSelect
+	If signed
+		Select *it\GetValue()
+		Case '+'
+			numSign = 1
+			*it\Forward()
+		Case '-'
+			numSign = -1
+			*it\Forward()
+		EndSelect
+	EndIf
 	; parse leading zeros
 	result = #False
 	While Not *it\Equal(*obj\End) And (*it\GetValue() = '0' Or (*obj\NumSep <> 0 And *it\GetValue() = *obj\NumSep))
@@ -1016,9 +1025,10 @@ EndProcedure
 ;
 ; @param[in,out] *obj - object
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumD(*obj.CTextParserAttributes, *out.Double = #Null)
+Procedure.i NumD(*obj.CTextParserAttributes, *out.Double = #Null, signed.i = #True)
 	Protected.q numSign, numVal, numDigits, digits, expSign, expVal
 	Protected.i result, hasExp
 	Protected.IIteratorC *it, *expIt
@@ -1033,14 +1043,16 @@ Procedure.i NumD(*obj.CTextParserAttributes, *out.Double = #Null)
 	expSign = 1
 	expVal = 0
 	hasExp = #False
-	Select *it\GetValue()
-	Case '+'
-		numSign = 1
-		*it\Forward()
-	Case '-'
-		numSign = -1
-		*it\Forward()
-	EndSelect
+	If signed
+		Select *it\GetValue()
+		Case '+'
+			numSign = 1
+			*it\Forward()
+		Case '-'
+			numSign = -1
+			*it\Forward()
+		EndSelect
+	EndIf
 	; parse leading zeros
 	result = #False
 	While Not *it\Equal(*obj\End) And (*it\GetValue() = '0' Or (*obj\NumSep <> 0 And *it\GetValue() = *obj\NumSep))
@@ -1131,9 +1143,10 @@ EndProcedure
 ; @param[in,out] *obj - object
 ; @param[in] check - compare against this value
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumVal(*obj.CTextParserAttributes, check.i, *out.Integer = #Null)
+Procedure.i NumVal(*obj.CTextParserAttributes, check.i, *out.Integer = #Null, signed.i = #True)
 	Protected.i resultValue
 	Protected.i result
 	Protected.IIteratorC *oldStart
@@ -1142,7 +1155,7 @@ Procedure.i NumVal(*obj.CTextParserAttributes, check.i, *out.Integer = #Null)
 	If *oldStart = #Null
 		ProcedureReturn #False
 	EndIf
-	result = Num(*obj, @resultValue)
+	result = Num(*obj, @resultValue, signed)
 	If result = #True And resultValue = check
 		If *out <> #Null
 			*out\i = resultValue
@@ -1162,9 +1175,10 @@ EndProcedure
 ; @param[in,out] *obj - object
 ; @param[in] check - compare against this value
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumQVal(*obj.CTextParserAttributes, check.q, *out.Quad = #Null)
+Procedure.i NumQVal(*obj.CTextParserAttributes, check.q, *out.Quad = #Null, signed.i = #True)
 	Protected.q resultValue
 	Protected.i result
 	Protected.IIteratorC *oldStart
@@ -1173,7 +1187,7 @@ Procedure.i NumQVal(*obj.CTextParserAttributes, check.q, *out.Quad = #Null)
 	If *oldStart = #Null
 		ProcedureReturn #False
 	EndIf
-	result = NumQ(*obj, @resultValue)
+	result = NumQ(*obj, @resultValue, signed)
 	If result = #True And resultValue = check
 		If *out <> #Null
 			*out\q = resultValue
@@ -1193,9 +1207,10 @@ EndProcedure
 ; @param[in,out] *obj - object
 ; @param[in] check - compare against this value
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumFVal(*obj.CTextParserAttributes, check.f, *out.Float = #Null)
+Procedure.i NumFVal(*obj.CTextParserAttributes, check.f, *out.Float = #Null, signed.i = #True)
 	Protected.f resultValue
 	Protected.i result
 	Protected.IIteratorC *oldStart
@@ -1204,7 +1219,7 @@ Procedure.i NumFVal(*obj.CTextParserAttributes, check.f, *out.Float = #Null)
 	If *oldStart = #Null
 		ProcedureReturn #False
 	EndIf
-	result = NumF(*obj, @resultValue)
+	result = NumF(*obj, @resultValue, signed)
 	If result = #True And Abs(resultValue - check) < 0.0000001
 		If *out <> #Null
 			*out\f = resultValue
@@ -1224,9 +1239,10 @@ EndProcedure
 ; @param[in,out] *obj - object
 ; @param[in] check - compare against this value
 ; @param[out] *out - pointer to the output variable (disabled by default)
+; @param[in] signed - set true to allow signed numbers (enabled by default)
 ; @return true on success, else false (e.g. if parsing failed)
 ; @remarks The function does not handle number overflows.
-Procedure.i NumDVal(*obj.CTextParserAttributes, check.d, *out.Double = #Null)
+Procedure.i NumDVal(*obj.CTextParserAttributes, check.d, *out.Double = #Null, signed.i = #True)
 	Protected.d resultValue
 	Protected.i result
 	Protected.IIteratorC *oldStart
@@ -1235,7 +1251,7 @@ Procedure.i NumDVal(*obj.CTextParserAttributes, check.d, *out.Double = #Null)
 	If *oldStart = #Null
 		ProcedureReturn #False
 	EndIf
-	result = NumD(*obj, @resultValue)
+	result = NumD(*obj, @resultValue, signed)
 	If result = #True And Abs(resultValue - check) < 0.0000001
 		If *out <> #Null
 			*out\d = resultValue
@@ -1705,7 +1721,8 @@ EndDataSection
 
 EndModule ; CTextParser
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 1253
+; FirstLine = 1233
 ; Folding = ---------
 ; EnableUnicode
 ; EnableXP
