@@ -82,11 +82,13 @@ min hour day month wday name text
 Month can be also on of Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct and Dec.  
 Weekday can be also on of Mon, Tue, Wed, Thu, Fri, Sat and Sun.  
 The date time values can have additional formats to the numbers to ease setups.  
+
 |Addition   |Meaning
 |-----------|--------------------------------------
 |`*`        |Same as entering every possible value.
 |`/<number>`|Use only every `<number>` value.
 |`-<number>`|Define a range until `<number>`.
+
 Use a hyphen as prefix to a CronAlert to disable it by default.  
 The values in name and text field need to be in the surrounded by double quotes.  
 The string in the text field will be used for voice output. If text starts with an exclamation mark  
