@@ -94,6 +94,7 @@ Declare.i WriteStringL(fileId.i, string.s, format.i = #PB_UTF8)
 Declare.s ReadStringL(fileId.i, format.i = #PB_UTF8)
 Declare.s GetUserConfigPath()
 Declare.s StrTime(Seconds.q)
+Declare.s TrimSingle(string.s, ch.c)
 Declare.s RemoveXml(string.s)
 Declare.i FileIcon(file.s, small.i = #False)
 Declare.i SetStatusBarWidth(statusBar.i, item.i, width.i)
@@ -260,6 +261,20 @@ Procedure.s StrTime(Seconds.q)
 		EndIf
 	EndIf
 	ProcedureReturn Result$
+EndProcedure
+
+
+; Removed the given character from both ends of the
+; passed string if both ends as equal to that character.
+;
+; @param[in] string - string to trim
+; @param[in] ch - character to remove from both ends
+; @return trimmed string or original string if criteria did not match
+Procedure.s TrimSingle(string.s, ch.c)
+	If Asc(Left(string, 1)) = ch And Asc(Right(string, 1)) = ch
+		ProcedureReturn Mid(string, 2, Len(string) - 2)
+	EndIf
+	ProcedureReturn string
 EndProcedure
 
 
@@ -953,8 +968,8 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 258
-; FirstLine = 251
+; CursorPosition = 96
+; FirstLine = 51
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

@@ -16,12 +16,18 @@ Command-line Syntax
 CronAlert can be started with command-line parameters to perform specific settings or action  
 on start-up. The following command-line options can be used.
 ```
+CronAlert -hmtv [file]
+CronAlert -s text
 -h, --help
    Display a short description of command-line options.
 -m, --mute
    Start CronAlert with sound muted. Sound is not muted by default.
+-s, --say <text>
+   Outputs all following values as single text to the speaker.
 -t, --tray
    Start CronAlert in system tray mode.
+-v, --volume <number>
+   Set the volume to the given value (0 to 100).
 <file>
    Open the given CronAlert file on start-up. This option overwrites the load last file option.
 ```
@@ -79,11 +85,11 @@ min hour day month wday name text
  |   +----------------------------- hour of the day from 0 to 23
  +--------------------------------- minute of the hour from 0 to 59
 ```
-Month can be also on of Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct and Dec.  
-Weekday can be also on of Mon, Tue, Wed, Thu, Fri, Sat and Sun.  
+Month can be also one of Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct and Dec.  
+Weekday can be also one of Mon, Tue, Wed, Thu, Fri, Sat and Sun.  
 The date time values can have additional formats to the numbers to ease setups.  
 
-|Addition   |Meaning
+|Format     |Meaning
 |-----------|--------------------------------------
 |`*`        |Same as entering every possible value.
 |`/<number>`|Use only every `<number>` value.
@@ -94,3 +100,9 @@ The values in name and text field need to be in the surrounded by double quotes.
 The string in the text field will be used for voice output. If text starts with an exclamation mark  
 the following string will be used as command-line to execute the given application instead of a  
 voice output.
+### Example
+```
+15,45 10-14 */2 * * "event" !"notepad.exe" "open_this_file.txt"
+```
+Open the file "open_this_file.txt" with notepad every second day between 10:00 and 14:00 if the  
+current minute is 15 or 45.

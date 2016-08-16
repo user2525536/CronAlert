@@ -128,6 +128,7 @@ UseModule WinComApi
 
 Global pVoice.ISpVoice
 Global pVoiceInitialized.i
+Global pClassId.i = ?CLSID_SpVoice53, pInterfaceId.i = ?IID_ISpVoice53
 
 
 ; Initializes the text-to-speech interface.
@@ -135,13 +136,17 @@ Global pVoiceInitialized.i
 ;
 ; @return #True on success, #False if Text-To-Speech API could not be initialized.
 Procedure.i Initialize()
+	Protected.i result = #True
 	If pVoiceInitialized = #False
-		If CoCreateInstance_(?CLSID_SpVoice, #Null, #CLSCTX_ALL, ?IID_ISpVoice, @pVoice) <> #S_OK
-			ProcedureReturn #False
+		result = #False
+		If CoCreateInstance_(?CLSID_SpVoice53, #Null, #CLSCTX_ALL, ?IID_ISpVoice53, @pVoice) = #S_OK
+			result = #True
+		ElseIf CoCreateInstance_(?CLSID_SpVoice51, #Null, #CLSCTX_ALL, ?IID_ISpVoice51, @pVoice) = #S_OK
+			result = #True
 		EndIf
-		pVoiceInitialized = #True
 	EndIf
-	ProcedureReturn #True
+	pVoiceInitialized = result
+	ProcedureReturn result
 EndProcedure
 
 
@@ -160,7 +165,7 @@ EndProcedure
 ;
 ; @return SAPI class ID
 Procedure.i GetClassId()
-	ProcedureReturn ?CLSID_SpVoice
+	ProcedureReturn pClassId
 EndProcedure
 
 
@@ -168,7 +173,7 @@ EndProcedure
 ;
 ; @return SAPI interface ID
 Procedure.i GetInterfaceId()
-	ProcedureReturn ?IID_ISpVoice
+	ProcedureReturn pInterfaceId
 EndProcedure
 
 
@@ -221,17 +226,20 @@ EndProcedure
 
 
 ; SAPI 5.1
-;DefineGuid(CLSID_SpVoice, $96749377, $3391, $11D2, $9E, $E3, $00, $C0, $4F, $79, $73, $09)
-;DefineGuid(IID_ISpVoice, $6C44DF74, $72B9, $4992, $A1,$EC, $EF, $99, $6E, $04, $22, $D4)
+DefineGuid(CLSID_SpVoice51, $96749377, $3391, $11D2, $9E, $E3, $00, $C0, $4F, $79, $73, $09)
+DefineGuid(IID_ISpVoice51, $6C44DF74, $72B9, $4992, $A1,$EC, $EF, $99, $6E, $04, $22, $D4)
 ; SAPI 5.3
-DefineGuid(CLSID_SpVoice, $96749377, $3391, $11D2, $9E, $E3, $00, $C0, $4F, $79, $73, $96)
-DefineGuid(IID_ISpVoice, $6C44DF74, $72B9, $4992, $A1, $EC, $EF, $99, $6E, $04, $22, $D4)
+DefineGuid(CLSID_SpVoice53, $96749377, $3391, $11D2, $9E, $E3, $00, $C0, $4F, $79, $73, $96)
+DefineGuid(IID_ISpVoice53, $6C44DF74, $72B9, $4992, $A1, $EC, $EF, $99, $6E, $04, $22, $D4)
+; SAPI 5.4 (same as 5.3)
+; DefineGuid(CLSID_SpVoice54, $96749377, $3391, $11D2, $9E, $E3, $00, $C0, $4F, $79, $73, $96)
+; DefineGuid(IID_ISpVoice54, $6C44DF74, $72B9, $4992, $A1, $EC, $EF, $99, $6E, $04, $22, $D4)
 
 
 EndModule ; TextToSpeech
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 137
-; FirstLine = 106
+; CursorPosition = 233
+; FirstLine = 175
 ; Folding = --
 ; EnableUnicode
 ; EnableXP

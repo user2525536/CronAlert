@@ -1,3 +1,8 @@
+Version 1.2.1 (2016-08-16)
+ - added: command-line option /volume for volume control
+ - added: command-line option /say to output text to the speaker
+ - added: support for SAPI 5.1
+ 
 Version 1.2.0 (2016-08-14)
  - added: volume control
  - added: alternative time format for preAlert and preTrigger (as MIN:SEC instead of SEC)

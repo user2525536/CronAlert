@@ -111,7 +111,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.0"
+#Version = "1.2.1"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -193,7 +193,6 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 	AddGadgetColumn(#GID_AlertList, #CID_AlertList_ETA, "ETA", 60)
 	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Name, "name", 70)
 	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Text, "text", 130)
-	AddSysTrayIcon(#STID_Main, WindowID(#WID_Main), icon)
 Else
 	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 	ExitProgram()
@@ -226,6 +225,7 @@ SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
 WM_TASKBARCREATED = RegisterWindowMessage_("TaskbarCreated")
 
 TextToSpeech::Initialize()
+AtExit(TextToSpeech::@DeInitialize())
 volume = TextToSpeech::GetVolume()
 
 ; handle user settings
@@ -233,16 +233,21 @@ MainWindowLoadUserConfig()
 
 ;- Command-line processor
 For i = 0 To CountProgramParameters() - 1
-	clParam = ProgramParameter(i)
+	clParam = TrimSingle(ProgramParameter(i), '"')
 	Select LCase(clParam)
 	Case "-h", "/h", "/?", "--help", "/help"
-		clParam = ~"CronAlert -ht [file]\n\n"
+		clParam = ~"CronAlert -hmtv [file]\n"
+		clParam = ~"CronAlert -s text\n\n"
 		clParam + ~" -h, --help\n"
 		clParam + ~"     Display this help.\n"
 		clParam + ~" -m, --mute\n"
 		clParam + ~"     Mute audio outputs.\n"
+		clParam + ~" -s, --say <text>\n"
+		clParam + ~"     Outputs all following values as single text to the speaker.\n"
 		clParam + ~" -t, --tray\n"
 		clParam + ~"     Start hidden in systray mode.\n"
+		clParam + ~" -v, --volume <number>\n"
+		clParam + ~"     Set the volume to the given value (0 to 100).\n"
 		clParam + ~"\n"
 		clParam + ~"file\n"
 		clParam + ~"     Open this file on start-up.\n"
@@ -250,13 +255,28 @@ For i = 0 To CountProgramParameters() - 1
 		ExitProgram()
 	Case "-m", "/m", "--mute", "/mute"
 		isMuted = #True
+	Case "-s", "/s", "--say", "/say"
+		i + 1
+		clParam = ""
+		While i < CountProgramParameters()
+			clParam + " " + TrimSingle(ProgramParameter(i), '"')
+			i + 1
+		Wend
+		TextToSpeech::Speak(Trim(clParam))
+		ExitProgram()
 	Case "-t", "/t", "--tray", "/tray"
 		mainWindowIsHidden = #True
+	Case "-v", "/v", "--volume", "/volume"
+		If i < CountProgramParameters() - 1
+			i + 1
+			volume = Val(ProgramParameter(i))
+			TextToSpeech::SetVolume(volume)
+		Else
+			MessageRequester("Error", "Missing parameter for option '" + clParam + "'.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+			ExitProgram()
+		EndIf
 	Default
 		If i >= CountProgramParameters() - 1
-			If Mid(clParam, 1, 1) = ~"\""
-				clParam = Mid(clParam, 2, Len(clParam) - 2)
-			EndIf
 			openFile = clParam
 			hasOpenFile = #True
 		Else
@@ -264,7 +284,6 @@ For i = 0 To CountProgramParameters() - 1
 			ExitProgram()
 		EndIf
 	EndSelect
-	clParam = ProgramParameter()
 Next
 
 If hasOpenFile And openFile <> ""
@@ -276,6 +295,7 @@ CheckWindowPosition(#WID_Main)
 
 AtExit(@MainWindowCleanUp())
 
+AddSysTrayIcon(#STID_Main, WindowID(#WID_Main), icon)
 HideWindow(#WID_Main, mainWindowIsHidden)
 
 
@@ -422,10 +442,10 @@ Procedure.i MainWindowLoadUserConfig()
 			winY = ReadLong(fileId) & $FFFFFFFF
 			winW = ReadLong(fileId) & $FFFFFFFF
 			winH = ReadLong(fileId) & $FFFFFFFF
-			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_Checked, ReadLong(fileId) & $FFFFFFFF)
-			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_ETA, ReadLong(fileId) & $FFFFFFFF)
-			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_Name, ReadLong(fileId) & $FFFFFFFF)
-			SendMessage_(GadgetID(#GID_AlertList), #LVM_SETCOLUMNWIDTH, #CID_AlertList_Text, ReadLong(fileId) & $FFFFFFFF)
+			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_Checked)
+			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_ETA)
+			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_Name)
+			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_Text)
 			If version = #ConfigFileVersion2
 				If ReadByte(fileId) <> 0
 					isMuted = #True
@@ -508,10 +528,10 @@ Procedure.i MainWindowSaveUserConfig()
 		WriteLong(fileId, lastWinY)
 		WriteLong(fileId, lastWinW)
 		WriteLong(fileId, lastWinH)
-		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_Checked, 0))
-		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_ETA, 0))
-		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_Name, 0))
-		WriteLong(fileId, SendMessage_(GadgetID(#GID_AlertList), #LVM_GETCOLUMNWIDTH, #CID_AlertList_Text, 0))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_Checked))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_ETA))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_Name))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_Text))
 		WriteByte(fileId, isMuted)
 		WriteWord(fileId, volume)
 		WriteByte(fileId, loadLastFile)
@@ -1116,8 +1136,6 @@ Procedure.i MainWindowCleanUp()
 	MainWindowUpdateCronAlert(#True)
 	; save user configuration
 	MainWindowSaveUserConfig()
-	; free text-to-speech interface
-	TextToSpeech::DeInitialize()
 EndProcedure
 
 
@@ -1134,8 +1152,8 @@ DataSection
 	IconDataCommandEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 1086
-; FirstLine = 1056
+; CursorPosition = 240
+; FirstLine = 213
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
