@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2016-08-16 18:54" user="pcfreak" host="D4"/>
+    <lastopen date="2016-08-17 17:49" user="pcfreak" host="D4"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
@@ -17,14 +17,14 @@
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="a8ab6df38155cab5aa624a5f07a9f7bc"/>
+      <fingerprint md5="68f40586154d5a635b72ca5989c6856d"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
       <fingerprint md5="aedc9d7c882e4b1f28a968cbcb504624"/>
     </file>
     <file name="src\CTextParser.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
       <fingerprint md5="ac5f4810fa9661eb664070acb48b4dbc"/>
     </file>
     <file name="src\IIteratorC.pbi">
@@ -33,7 +33,7 @@
     </file>
     <file name="src\ITextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="8a2629a05d16c0f1fe124ea10aac0079"/>
+      <fingerprint md5="69f89e308167c43ccd8304a837fccb44"/>
     </file>
     <file name="src\TextToSpeech.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -41,7 +41,7 @@
     </file>
     <file name="src\Utility.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="1e9bd64c3622e89ea924de654cfea548"/>
+      <fingerprint md5="8eb368b2d25172ac96711567a6c0fbda"/>
     </file>
     <file name="src\WinComApi.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -62,12 +62,12 @@
       <options unicode="1" thread="1" xpskin="1"/>
       <icon enable="1">etc\main.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1,2,1,0"/>
-        <field1 value="1,2,1,0"/>
+        <field0 value="1,2,2,0"/>
+        <field1 value="1,2,2,0"/>
         <field2 value="pcfreak"/>
         <field3 value="CronAlert"/>
-        <field4 value="1.2.1"/>
-        <field5 value="1.2.1"/>
+        <field4 value="1.2.2"/>
+        <field5 value="1.2.2"/>
         <field6 value="CronAlert"/>
         <field7 value="CronAlert"/>
         <field8 value="CronAlert"/>

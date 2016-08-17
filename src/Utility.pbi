@@ -94,7 +94,7 @@ Declare.i WriteStringL(fileId.i, string.s, format.i = #PB_UTF8)
 Declare.s ReadStringL(fileId.i, format.i = #PB_UTF8)
 Declare.s GetUserConfigPath()
 Declare.s StrTime(Seconds.q)
-Declare.s TrimSingle(string.s, ch.c)
+Declare.s TrimQuotes(string.s)
 Declare.s RemoveXml(string.s)
 Declare.i FileIcon(file.s, small.i = #False)
 Declare.i SetStatusBarWidth(statusBar.i, item.i, width.i)
@@ -270,8 +270,8 @@ EndProcedure
 ; @param[in] string - string to trim
 ; @param[in] ch - character to remove from both ends
 ; @return trimmed string or original string if criteria did not match
-Procedure.s TrimSingle(string.s, ch.c)
-	If Asc(Left(string, 1)) = ch And Asc(Right(string, 1)) = ch
+Procedure.s TrimQuotes(string.s)
+	If (Left(string, 1) = "'" And Right(string, 1) = "'") Or (Left(string, 1) = ~"\"" And Right(string, 1) = ~"\"")
 		ProcedureReturn Mid(string, 2, Len(string) - 2)
 	EndIf
 	ProcedureReturn string
@@ -636,7 +636,7 @@ EndProcedure
 ; @return true on success, else false
 Procedure.i ParseString(parser.ITextParser, *out.String, *error.String)
 	Protected result.i = #False
-	Protected string.String
+	Protected string.String, ch.u
 	Protected savedIt.IIteratorC
 	savedIt = parser\CloneStartIterator()
 	If savedIt = #Null
@@ -645,16 +645,16 @@ Procedure.i ParseString(parser.ITextParser, *out.String, *error.String)
 	EndIf
 	Repeat
 		string\s = ""
-		If Not parser\CharVal('"')
+		If Not parser\CharSet(~"\"'", @ch)
 			*error\s = GetLineInfo(parser) + ": Expected <string> here."
 			Break
 		EndIf
-		If Not parser\StringUntilChar(~"\"\n\r", @string)
+		If Not parser\StringUntilChar(~"\n\r" + Chr(ch), @string)
 			*error\s = GetLineInfo(parser) + ~": Expected '\"' here."
 			Break
 		EndIf
-		If Not parser\CharVal('"')
-			*error\s = GetLineInfo(parser) + ~": Expected '\"' here."
+		If Not parser\CharVal(ch)
+			*error\s = GetLineInfo(parser) + ~": Expected '" + Chr(ch) + "' here."
 			Break
 		EndIf
 		result = #True
@@ -968,8 +968,8 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 96
-; FirstLine = 51
+; CursorPosition = 638
+; FirstLine = 636
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

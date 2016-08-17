@@ -84,6 +84,8 @@ Enumeration ; Menu Items
  	#MIID_Mute
  	#MIID_ChangeVolume
  	#MIID_About
+ 	#MIID_VolumeCheckOk
+ 	#MIID_VolumeCheckCancel
 EndEnumeration
 
 
@@ -111,7 +113,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.1"
+#Version = "1.2.2"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -134,7 +136,7 @@ Declare.i MainWindowCloseCronAlert()
 Declare.i MainWindowCleanUp()
 
 
-Global.i windowXDif, windowYDif, lastWinX, lastWinY, lastWinW, lastWinH
+Global.i windowXDif, windowYDif, lastWinX, lastWinY, lastWinW, lastWinH, newWinState = #PB_Window_Normal
 Global.i WM_TASKBARCREATED
 Global.s mainWindowTitle = "CronAlert"
 Global.s nextEvent = "", nextEta = "", clParam
@@ -144,96 +146,20 @@ Global.s openFile = ProgramFilename(), openFileMd5 = ""
 Global.s lastOpenFile = ""
 Global.i hasOpenFile = #False, openFileModDate = 0, hasLastFile = #False, reloadOnChange = #True, fileWasChanged = #False
 Global.i iconAudio, iconAudioAlert, iconCommand
-Define.s file
-Define.i i
+Define.s file, forcedFile
+Define.i forcedVolume
+Define.i i, forceOpenFile = #False, forceTray = #False, forceMuted = #False, forceVolume = #False
 
 
-iconAudio = CatchImage(#PB_Any, ?IconDataAudio)
-iconAudioAlert = CatchImage(#PB_Any, ?IconDataAudioAlert)
-iconCommand = CatchImage(#PB_Any, ?IconDataCommand)
 UseMD5Fingerprint()
-
-
-;- Main
-If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_SizeGadget | #PB_Window_ScreenCentered | #PB_Window_Invisible)
-	If CreateMenu(#MID_Main, WindowID(#WID_Main))
-		MenuTitle("&File")
-		MenuItem(#MIID_Open, "&Open")
-		MenuItem(#MIID_OpenLastFile, "Open l&ast file")
-		MenuItem(#MIID_Close, "&Close")
-		MenuBar()
-		MenuItem(#MIID_OpenLastFileOnStart, "Open &last file on start")
-		MenuItem(#MIID_ReloadOnChange, "&Reload on change")
-		MenuBar()
-		MenuItem(#MIID_Exit, "&Exit")
-		MenuTitle("&Sound")
-		MenuItem(#MIID_VolumeCheck, "&Volume check")
-		MenuItem(#MIID_ChangeVolume, "&Change volume")
-		MenuItem(#MIID_Mute, "&Mute")
-		MenuTitle("&Help")
-		MenuItem(#MIID_About, "&About")
-	EndIf
-	If CreatePopupMenu(#MID_SysTray)
-		MenuItem(#MIID_Mute, "&Mute")
-		MenuItem(#MIID_ChangeVolume, "&Change volume")
-		MenuBar()
-		MenuItem(#MIID_Exit, "&Exit")
-	EndIf
-	If CreateStatusBar(#SBID_Main, WindowID(#WID_Main))
-		AddStatusBarField(80)
-		AddStatusBarField(100)
-		AddStatusBarField(40)
-		AddStatusBarField(100)
-		StatusBarText(#SBID_Main, 0, "Next events:", #PB_StatusBar_BorderLess)
-		StatusBarText(#SBID_Main, 2, "ETA:", #PB_StatusBar_BorderLess)
-	EndIf
-	TextGadget(#GID_CurrentTimeLabel, 10, 13, 80, 14, "Current Time:")
-	StringGadget(#GID_CurrentTimeValue, 90, 13, 120, 14, "", #PB_String_BorderLess | #PB_String_ReadOnly)
-	ListIconGadget(#GID_AlertList, 0, 40, 320, 200 - MenuHeight() - StatusBarHeight(#SBID_Main), "Type", 40, #PB_ListIcon_CheckBoxes | #PB_ListIcon_GridLines | #PB_ListIcon_FullRowSelect | #LVS_EX_FLATSB)
-	AddGadgetColumn(#GID_AlertList, #CID_AlertList_ETA, "ETA", 60)
-	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Name, "name", 70)
-	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Text, "text", 130)
-Else
-	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
-	ExitProgram()
-EndIf
-
-
-If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
- 	TrackBarGadget(#GID_VolumeBar, 10, 20, 170, 20, 0, 100)
-	TextGadget(#GID_VolumeLabel, 190, 23, 40, 14, "-%")
- 	ButtonGadget(#GID_VolumeTest, 230, 20, 60, 20, "Test")
- 	ButtonGadget(#GID_VolumeOk, 160, 60, 60, 20, "OK", #PB_Button_Default)
- 	ButtonGadget(#GID_VolumeCancel, 230, 60, 60, 20, "Cancel")
-Else
-	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
-	ExitProgram()
-EndIf
-
-
-GetWindowRect_(WindowID(#WID_Main), winRect.rect)
-windowXDif = winRect\right - winRect\left - WindowWidth(#WID_Main)
-windowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Main)
-
-EnableWindowDrop(#WID_Main, #PB_Drop_Files, #PB_Drag_Copy)
-SetWindowCallback(@MainWindowCallback())
-MainWindowResizeGadgets()
-MainWindowRefresh()
-; AddWindowTimer() does not work while we are processing window events
-SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
-
-WM_TASKBARCREATED = RegisterWindowMessage_("TaskbarCreated")
-
 TextToSpeech::Initialize()
 AtExit(TextToSpeech::@DeInitialize())
 volume = TextToSpeech::GetVolume()
 
-; handle user settings
-MainWindowLoadUserConfig()
 
 ;- Command-line processor
 For i = 0 To CountProgramParameters() - 1
-	clParam = TrimSingle(ProgramParameter(i), '"')
+	clParam = TrimQuotes(ProgramParameter(i))
 	Select LCase(clParam)
 	Case "-h", "/h", "/?", "--help", "/help"
 		clParam = ~"CronAlert -hmtv [file]\n"
@@ -254,31 +180,32 @@ For i = 0 To CountProgramParameters() - 1
 		MessageRequester("Command-line options", clParam, #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
 		ExitProgram()
 	Case "-m", "/m", "--mute", "/mute"
-		isMuted = #True
+		forceMuted = #True
 	Case "-s", "/s", "--say", "/say"
 		i + 1
 		clParam = ""
 		While i < CountProgramParameters()
-			clParam + " " + TrimSingle(ProgramParameter(i), '"')
+			clParam + " " + TrimQuotes(ProgramParameter(i))
 			i + 1
 		Wend
 		TextToSpeech::Speak(Trim(clParam))
 		ExitProgram()
 	Case "-t", "/t", "--tray", "/tray"
-		mainWindowIsHidden = #True
+		forceTray = #True
 	Case "-v", "/v", "--volume", "/volume"
 		If i < CountProgramParameters() - 1
 			i + 1
-			volume = Val(ProgramParameter(i))
-			TextToSpeech::SetVolume(volume)
+			forcedVolume = Val(ProgramParameter(i))
+			forceVolume = #True
+			TextToSpeech::SetVolume(forcedVolume)
 		Else
 			MessageRequester("Error", "Missing parameter for option '" + clParam + "'.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 			ExitProgram()
 		EndIf
 	Default
 		If i >= CountProgramParameters() - 1
-			openFile = clParam
-			hasOpenFile = #True
+			forcedFile = clParam
+			forceOpenFile = #True
 		Else
 			MessageRequester("Error", "Unknown program option '" + clParam + "'.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 			ExitProgram()
@@ -286,16 +213,123 @@ For i = 0 To CountProgramParameters() - 1
 	EndSelect
 Next
 
+
+iconAudio = CatchImage(#PB_Any, ?IconDataAudio)
+iconAudioAlert = CatchImage(#PB_Any, ?IconDataAudioAlert)
+iconCommand = CatchImage(#PB_Any, ?IconDataCommand)
+
+
+;- Main
+If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_SizeGadget | #PB_Window_ScreenCentered | #PB_Window_Invisible)
+	If CreateMenu(#MID_Main, WindowID(#WID_Main))
+		MenuTitle("&File")
+		MenuItem(#MIID_Open, ~"&Open\tCtrl+O")
+		MenuItem(#MIID_OpenLastFile, ~"Open l&ast file\tF2")
+		MenuItem(#MIID_Close, ~"&Close\tCtrl+C")
+		MenuBar()
+		MenuItem(#MIID_OpenLastFileOnStart, "Open &last file on start")
+		MenuItem(#MIID_ReloadOnChange, "&Reload on change")
+		MenuBar()
+		MenuItem(#MIID_Exit, ~"&Exit\tAlt+F4")
+		MenuTitle("&Sound")
+		MenuItem(#MIID_VolumeCheck, ~"&Volume check\tT")
+		MenuItem(#MIID_ChangeVolume, ~"&Change volume\tC")
+		MenuItem(#MIID_Mute, ~"&Mute\tM")
+		MenuTitle("&Help")
+		MenuItem(#MIID_About, ~"&About\tF1")
+	EndIf
+	If CreatePopupMenu(#MID_SysTray)
+		MenuItem(#MIID_Mute, "&Mute")
+		MenuItem(#MIID_ChangeVolume, "&Change volume")
+		MenuBar()
+		MenuItem(#MIID_Exit, "&Exit")
+	EndIf
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_O, #MIID_Open)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_F2, #MIID_OpenLastFile)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_C, #MIID_Close)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_T, #MIID_VolumeCheck)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_C, #MIID_ChangeVolume)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_M, #MIID_Mute)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_F1, #MIID_About)
+	If CreateStatusBar(#SBID_Main, WindowID(#WID_Main))
+		AddStatusBarField(80)
+		AddStatusBarField(100)
+		AddStatusBarField(40)
+		AddStatusBarField(100)
+		StatusBarText(#SBID_Main, 0, "Next events:", #PB_StatusBar_BorderLess)
+		StatusBarText(#SBID_Main, 2, "ETA:", #PB_StatusBar_BorderLess)
+	EndIf
+	TextGadget(#GID_CurrentTimeLabel, 10, 13, 80, 14, "Current Time:")
+	StringGadget(#GID_CurrentTimeValue, 90, 13, 120, 14, "", #PB_String_BorderLess | #PB_String_ReadOnly)
+	ListIconGadget(#GID_AlertList, 0, 40, 320, 200 - MenuHeight() - StatusBarHeight(#SBID_Main), "Type", 40, #PB_ListIcon_CheckBoxes | #PB_ListIcon_GridLines | #PB_ListIcon_FullRowSelect | #LVS_EX_FLATSB)
+	AddGadgetColumn(#GID_AlertList, #CID_AlertList_ETA, "ETA", 60)
+	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Name, "name", 70)
+	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Text, "text", 130)
+	AddSysTrayIcon(#STID_Main, WindowID(#WID_Main), icon)
+Else
+	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	ExitProgram()
+EndIf
+
+
+If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
+ 	TrackBarGadget(#GID_VolumeBar, 10, 20, 170, 20, 0, 100)
+	TextGadget(#GID_VolumeLabel, 190, 23, 40, 14, "-%")
+ 	ButtonGadget(#GID_VolumeTest, 230, 20, 60, 20, "Test")
+ 	ButtonGadget(#GID_VolumeOk, 160, 60, 60, 20, "OK", #PB_Button_Default)
+ 	ButtonGadget(#GID_VolumeCancel, 230, 60, 60, 20, "Cancel")
+ 	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Return, #MIID_VolumeCheckOk)
+ 	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Escape, #MIID_VolumeCheckCancel)
+Else
+	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	ExitProgram()
+EndIf
+
+
+GetWindowRect_(WindowID(#WID_Main), winRect.rect)
+windowXDif = winRect\right - winRect\left - WindowWidth(#WID_Main)
+windowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Main)
+
+EnableWindowDrop(#WID_Main, #PB_Drop_Files, #PB_Drag_Copy)
+SetWindowCallback(@MainWindowCallback())
+MainWindowResizeGadgets()
+MainWindowRefresh()
+; AddWindowTimer() does not work while we are processing window events
+SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
+
+WM_TASKBARCREATED = RegisterWindowMessage_("TaskbarCreated")
+
+; handle user settings
+MainWindowLoadUserConfig()
+
+; handle forced command-line options
+If forceOpenFile
+	openFile = forcedFile
+	hasOpenFile = #True
+EndIf
+If forceTray
+	mainWindowIsHidden = #True
+EndIf
+If forceMuted
+	isMuted = #True
+EndIf
+If forcedVolume
+	volume = forcedVolume
+EndIf
+
 If hasOpenFile And openFile <> ""
 	MainWindowLoadCronAlert(openFile)
 EndIf
+TextToSpeech::SetVolume(volume)
 
 MainWindowUpdateMenus()
 CheckWindowPosition(#WID_Main)
 
 AtExit(@MainWindowCleanUp())
 
-AddSysTrayIcon(#STID_Main, WindowID(#WID_Main), icon)
+If Not mainWindowIsHidden
+	SetWindowState(#WID_Main, newWinState)
+EndIf
 HideWindow(#WID_Main, mainWindowIsHidden)
 
 
@@ -385,8 +419,17 @@ Repeat
 				WindowY(#WID_Main) + (WindowHeight(#WID_Main) - WindowHeight(#WID_VolumneRequester)) / 2,
 				#PB_Ignore, #PB_Ignore)
 			HideWindow(#WID_VolumneRequester, #False)
+			SetActiveGadget(#GID_VolumeOk)
 		Case #MIID_About
 			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
+		Case #MIID_VolumeCheckOk
+			volume = GetGadgetState(#GID_VolumeBar)
+			TextToSpeech::SetVolume(volume)
+			HideWindow(#WID_VolumneRequester, #True)
+			DisableWindow(#WID_Main, #False)
+		Case #MIID_VolumeCheckCancel
+			HideWindow(#WID_VolumneRequester, #True)
+			DisableWindow(#WID_Main, #False)
 		EndSelect
 	Case #PB_Event_WindowDrop
 		Select EventDropType()
@@ -464,9 +507,9 @@ Procedure.i MainWindowLoadUserConfig()
 				mainWindowIsHidden = #True
 			Else
 				If winState & #UCWS_Maximized = #UCWS_Maximized
-					SetWindowState(#WID_Main, #PB_Window_Maximize)
+					newWinState = #PB_Window_Maximize
 				Else
-					SetWindowState(#WID_Main, #PB_Window_Normal)
+					newWinState = #PB_Window_Normal
 				EndIf
 				mainWindowIsHidden = #False
 			EndIf
@@ -909,7 +952,9 @@ Procedure.i MainWindowRefresh()
 			StatusBarText(#SBID_Main, 3, nextEta)
 		EndIf
 	Else
-		SysTrayIconToolTip(#STID_Main, "")
+		If IsSysTrayIcon(#STID_Main)
+			SysTrayIconToolTip(#STID_Main, "")
+		EndIf
 		StatusBarText(#SBID_Main, 1, "")
 		StatusBarText(#SBID_Main, 3, "")
 	EndIf
@@ -1152,8 +1197,8 @@ DataSection
 	IconDataCommandEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 240
-; FirstLine = 213
+; CursorPosition = 330
+; FirstLine = 287
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

@@ -1,3 +1,10 @@
+Version 1.2.2 (2016-08-17)
+ - added: keyboard shortcuts
+ - added: single quoted string format support
+ - fixed: showing window in some cases if /say was used
+ - fixed: internal type mismatches
+ - fixed: Window flushing if starting with /tray for some cases
+
 Version 1.2.1 (2016-08-16)
  - added: command-line option /volume for volume control
  - added: command-line option /say to output text to the speaker

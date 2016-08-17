@@ -65,9 +65,9 @@ Interface ITextParser
 	Digit.i(*out.Unicode = #Null)
 	XDigit.i(*out.Unicode = #Null)
 	CharCall.i(check.ITextParserCharCallback, *out.Unicode = #Null)
-	CharRange.i(checkFrom.u, checkTo.u, *out.String = #Null)
-	CharSet.i(set.s, *out.String = #Null)
-	CharSetI.i(set.s, *out.String = #Null)
+	CharRange.i(checkFrom.u, checkTo.u, *out.Unicode = #Null)
+	CharSet.i(set.s, *out.Unicode = #Null)
+	CharSetI.i(set.s, *out.Unicode = #Null)
 	String.i(check.s, *out.String = #Null)
 	StringI.i(check.s, *out.String = #Null)
 	StringUntil.i(string.s, *out.String = #Null)
@@ -114,8 +114,8 @@ EndDeclareModule ; ITextParser
 Module ITextParser
 EndModule ; ITextParser
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 93
-; FirstLine = 32
+; CursorPosition = 69
+; FirstLine = 44
 ; Folding = -
 ; EnableUnicode
 ; EnableXP

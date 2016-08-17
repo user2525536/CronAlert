@@ -2,14 +2,14 @@ About
 =====
 CronAlert is a GUI Windows application which is intended to offer Cron like features in Windows.  
 Additionally it supports text-to-speech output for acoustic alerts.
-
+CronAlert realizes audio text output via Windows' SAPI interface. This includes SSML.
+See https://msdn.microsoft.com/en-us/library/ms723627(v=vs.85).aspx#W3C_Speech_Synthesis_Markup_Language
 
 How to use
 ==========
 - Create a CronAlert file in a standard text editor
 - Start the program
 - Open the created CronAlert file
-
 
 Command-line Syntax
 ===================
