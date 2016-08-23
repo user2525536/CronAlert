@@ -32,6 +32,7 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
 XIncludeFile "CFileIteratorC.pbi"
 XIncludeFile "CTextParser.pbi"
 
@@ -342,7 +343,7 @@ EndProcedure
 ; @param[in] width - new item width
 ; @return non-zero on success, else zero
 Procedure.i SetStatusBarWidth(statusBar.i, item.i, width.i)
-	Protected nParts.i, leftField.l, result.i
+	Protected nParts.i, leftField.l, result.i, *dwFields
 	If IsStatusBar(statusBar)
 		nParts = SendMessage_(StatusBarID(StatusBar), #SB_GETPARTS, 0, 0)
 		*dwFields = AllocateMemory(nParts * 4)
@@ -968,8 +969,7 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 638
-; FirstLine = 636
+; CursorPosition = 34
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

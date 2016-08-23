@@ -8,50 +8,51 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2016-08-17 17:49" user="pcfreak" host="D4"/>
+    <lastopen date="2016-08-23 20:04" user="pcfreak" host="D4"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="62e862e05f7d28e33282f3a0d53ba1a0"/>
+      <fingerprint md5="42d5c4524475356f4ae29ee1424e7e0a"/>
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="68f40586154d5a635b72ca5989c6856d"/>
+      <fingerprint md5="159588e9c835e2c5cb689cc25402c439"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="aedc9d7c882e4b1f28a968cbcb504624"/>
+      <fingerprint md5="61e810d3570e247222368194aae65a94"/>
     </file>
     <file name="src\CTextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="ac5f4810fa9661eb664070acb48b4dbc"/>
+      <fingerprint md5="d7f4eb886aa39bfb38e76097fb6a6530"/>
     </file>
     <file name="src\IIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="e541ea808fbf84377477508837ca1ae4"/>
+      <fingerprint md5="879e497610553a966e3914c4f9e63ec6"/>
     </file>
     <file name="src\ITextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="69f89e308167c43ccd8304a837fccb44"/>
+      <fingerprint md5="55edb77a14fc65945946e86a39f01242"/>
     </file>
     <file name="src\TextToSpeech.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="33e09668ff850c437c98d40f287ec772"/>
+      <fingerprint md5="01d8c5ebe29992bd511ff62aaa189485"/>
     </file>
     <file name="src\Utility.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="8eb368b2d25172ac96711567a6c0fbda"/>
+      <fingerprint md5="fc68056952dd699e96f2f9626452636a"/>
     </file>
     <file name="src\WinComApi.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="659c790b61b3d0e94a39b94ccfe7be86"/>
+      <fingerprint md5="4e9ad8010d053b320ef43e77bc7957aa"/>
     </file>
   </section>
   <section name="targets">
     <target name="Debug" enabled="0" default="1">
       <inputfile value="src\CronAlert.pb"/>
       <outputfile value="bin\CronAlert.exe"/>
+      <executable value="bin\CronAlert.exe"/>
       <options unicode="1" thread="1" xpskin="1" debug="1"/>
       <icon enable="1">etc\main.ico</icon>
     </target>
@@ -62,12 +63,12 @@
       <options unicode="1" thread="1" xpskin="1"/>
       <icon enable="1">etc\main.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1,2,2,0"/>
-        <field1 value="1,2,2,0"/>
+        <field0 value="1,2,3,0"/>
+        <field1 value="1,2,3,0"/>
         <field2 value="pcfreak"/>
         <field3 value="CronAlert"/>
-        <field4 value="1.2.2"/>
-        <field5 value="1.2.2"/>
+        <field4 value="1.2.3"/>
+        <field5 value="1.2.3"/>
         <field6 value="CronAlert"/>
         <field7 value="CronAlert"/>
         <field8 value="CronAlert"/>

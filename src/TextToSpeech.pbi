@@ -32,6 +32,7 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
 XIncludeFile "WinComApi.pbi"
 
 
@@ -238,8 +239,7 @@ DefineGuid(IID_ISpVoice53, $6C44DF74, $72B9, $4992, $A1, $EC, $EF, $99, $6E, $04
 
 EndModule ; TextToSpeech
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 233
-; FirstLine = 175
+; CursorPosition = 34
 ; Folding = --
 ; EnableUnicode
 ; EnableXP

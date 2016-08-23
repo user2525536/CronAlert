@@ -32,6 +32,7 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
 XIncludeFile "IIteratorC.pbi"
 
 
@@ -114,8 +115,7 @@ EndDeclareModule ; ITextParser
 Module ITextParser
 EndModule ; ITextParser
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 69
-; FirstLine = 44
+; CursorPosition = 34
 ; Folding = -
 ; EnableUnicode
 ; EnableXP

@@ -32,6 +32,7 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
 XIncludeFile "TextToSpeech.pbi"
 XIncludeFile "Utility.pbi"
 
@@ -77,6 +78,7 @@ Enumeration ; Menu Items
  	#MIID_Open
  	#MIID_Close
  	#MIID_OpenLastFile
+ 	#MIID_OpenWithEditor
  	#MIID_OpenLastFileOnStart
  	#MIID_ReloadOnChange
  	#MIID_Exit
@@ -113,7 +115,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.2"
+#Version = "1.2.3"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -145,10 +147,11 @@ Global.i isMuted = #False, volume = 100, mainWindowIsHidden = #False, loadLastFi
 Global.s openFile = ProgramFilename(), openFileMd5 = ""
 Global.s lastOpenFile = ""
 Global.i hasOpenFile = #False, openFileModDate = 0, hasLastFile = #False, reloadOnChange = #True, fileWasChanged = #False
-Global.i iconAudio, iconAudioAlert, iconCommand
+Global.i iconAudio, iconAudioAlert, iconCommand, iconCommandAlert
 Define.s file, forcedFile
 Define.i forcedVolume
 Define.i i, forceOpenFile = #False, forceTray = #False, forceMuted = #False, forceVolume = #False
+Define   winRect.RECT
 
 
 UseMD5Fingerprint()
@@ -217,6 +220,7 @@ Next
 iconAudio = CatchImage(#PB_Any, ?IconDataAudio)
 iconAudioAlert = CatchImage(#PB_Any, ?IconDataAudioAlert)
 iconCommand = CatchImage(#PB_Any, ?IconDataCommand)
+iconCommandAlert = CatchImage(#PB_Any, ?IconDataCommandAlert)
 
 
 ;- Main
@@ -225,6 +229,7 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 		MenuTitle("&File")
 		MenuItem(#MIID_Open, ~"&Open\tCtrl+O")
 		MenuItem(#MIID_OpenLastFile, ~"Open l&ast file\tF2")
+		MenuItem(#MIID_OpenWithEditor, ~"Open with &editor\tCTRL-E")
 		MenuItem(#MIID_Close, ~"&Close\tCtrl+C")
 		MenuBar()
 		MenuItem(#MIID_OpenLastFileOnStart, "Open &last file on start")
@@ -239,6 +244,7 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 		MenuItem(#MIID_About, ~"&About\tF1")
 	EndIf
 	If CreatePopupMenu(#MID_SysTray)
+		MenuItem(#MIID_OpenWithEditor, "Open with &editor")
 		MenuItem(#MIID_Mute, "&Mute")
 		MenuItem(#MIID_ChangeVolume, "&Change volume")
 		MenuBar()
@@ -246,6 +252,7 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 	EndIf
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_O, #MIID_Open)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_F2, #MIID_OpenLastFile)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_E, #MIID_OpenWithEditor)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_C, #MIID_Close)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_T, #MIID_VolumeCheck)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_C, #MIID_ChangeVolume)
@@ -286,7 +293,7 @@ Else
 EndIf
 
 
-GetWindowRect_(WindowID(#WID_Main), winRect.rect)
+GetWindowRect_(WindowID(#WID_Main), winRect)
 windowXDif = winRect\right - winRect\left - WindowWidth(#WID_Main)
 windowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Main)
 
@@ -350,7 +357,7 @@ Repeat
 					If i <> alerts()\enabled
 						fileWasChanged = #True
 						SetWindowTitle(#WID_Main, mainWindowTitle + " - " + openFile + "*")
-						i = alerts()\enabled
+						alerts()\enabled = i
 					EndIf
 				Next
 			EndSelect
@@ -382,6 +389,16 @@ Repeat
 		Case #MIID_OpenLastFile
 			If lastOpenFile <> ""
 				MainWindowLoadCronAlert(lastOpenFile)
+			EndIf
+		Case #MIID_OpenWithEditor
+			If hasOpenFile
+				If ShellExecute_(GetDesktopWindow_(), "edit", openFile, #Null, #Null, #SW_SHOWDEFAULT) <= 32
+					If RunProgram("notepad.exe", openFile, GetPathPart(openFile)) = 0
+						If ShellExecute_(GetDesktopWindow_(), "openas", openFile, #Null, #Null, #SW_SHOWDEFAULT) <= 32
+							MessageRequester("Error", ~"Failed to open \"" + openFile + ~"\" in an editor.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+						EndIf
+					EndIf
+				EndIf
 			EndIf
 		Case #MIID_OpenLastFileOnStart
 			If loadLastFile
@@ -607,8 +624,10 @@ EndProcedure
 ; global variables.
 Procedure.i MainWindowUpdateMenus()
 	If hasOpenFile
+		DisableMenuItem(#MID_Main, #MIID_OpenWithEditor, #False)
 		DisableMenuItem(#MID_Main, #MIID_Close, #False)
 	Else
+		DisableMenuItem(#MID_Main, #MIID_OpenWithEditor, #True)
 		DisableMenuItem(#MID_Main, #MIID_Close, #True)
 	EndIf
 	If hasLastFile
@@ -844,9 +863,9 @@ Procedure.i MainWindowRefresh()
 	Protected localTimezone.TIME_ZONE_INFORMATION
 	Protected.i currentTime = Date(), timezoneTime, minDiff, splitPos
 	Protected.s dateTimeStr, aNextEvent, aNextEta, cmdPart, parmPart
-	Protected NewList preTriggers.s()
+	Protected NewList preTriggers.s(), NewMap preTriggerFilter.i()
 	Protected NewList triggers.s()
-	Protected textOutput.s
+	Protected textOutput.s, gotOutput.i
 	; update only once per second
 	If lastTime = currentTime
 		ProcedureReturn
@@ -870,9 +889,12 @@ Procedure.i MainWindowRefresh()
 			alerts()\eta = -1
 			alerts()\nextTrigger = -1
 			alerts()\state = #AlertState_Idle
-			If alerts()\type = #AlertType_Audio
+			Select alerts()\type
+			Case #AlertType_Audio
 				SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudio))
-			EndIf
+			Case #AlertType_Command
+				SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconCommand))
+			EndSelect
 			MainWindowUpdateAlertEtaWDays(timezoneTime)
 		ElseIf alerts()\nextTrigger <> -1
 			alerts()\eta = alerts()\nextTrigger - timezoneTime
@@ -898,11 +920,14 @@ Procedure.i MainWindowRefresh()
 				If alerts()\enabled
 					AddElement(preTriggers())
 					preTriggers() = alerts()\name
-					If alerts()\type = #AlertType_Audio
-						SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudioAlert))
-					EndIf
 				EndIf
 				alerts()\state = #AlertState_PreTriggered
+				Select alerts()\type
+				Case #AlertType_Audio
+					SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconAudioAlert))
+				Case #AlertType_Command
+					SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconCommandAlert))
+				EndSelect
 			ElseIf alerts()\eta <= alerts()\preTrigger And Not alerts()\state = #AlertState_Triggered
 				If alerts()\enabled
 					Select alerts()\type
@@ -971,8 +996,13 @@ Procedure.i MainWindowRefresh()
 			textOutput + " "
 		EndIf
 		textOutput + "Coming soon. "
+		ClearMap(preTriggerFilter())
+		gotOutput = #False
 		ForEach preTriggers()
-			If ListIndex(preTriggers()) <> 0
+			If FindMapElement(preTriggerFilter(), LCase(preTriggers()))
+				Continue
+			EndIf
+			If gotOutput
 				If ListIndex(preTriggers()) + 1 = ListSize(preTriggers())
 					textOutput + " and "
 				Else
@@ -980,6 +1010,8 @@ Procedure.i MainWindowRefresh()
 				EndIf
 			EndIf
 			textOutput + preTriggers()
+			AddMapElement(preTriggerFilter(), LCase(preTriggers()))
+			gotOutput = #True
 		Next
 		textOutput + "."
 	EndIf
@@ -999,7 +1031,7 @@ EndProcedure
 ; @return #PB_ProcessPureBasicEvents to pass the value to its original handler
 Procedure.i MainWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
 	Protected result.i = #PB_ProcessPureBasicEvents
-	Protected modDate.i
+	Protected modDate.i, *lprc.RECT
 	Select uMsg
 	Case WM_TASKBARCREATED
 		; restore the systray icon
@@ -1029,7 +1061,7 @@ Procedure.i MainWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
 		; handle layouting
 		MainWindowResizeGadgets()
 	Case #WM_SIZING
-		*lprc.RECT = lParam
+		*lprc = lParam
 		If (*lprc\right - *lprc\left < #WinMinWidth + windowXDif)
 			*lprc\right = *lprc\left + #WinMinWidth + windowXDif
 			UpdateWindow_(hWnd)
@@ -1054,6 +1086,7 @@ EndProcedure
 ;
 ; @param[in] force - force update
 Procedure.i MainWindowUpdateCronAlert(force.i = #False)
+	Static lastUpdate.i = 0
 	Protected.i now = Date(), fileId, origBom, bom, hasMore
 	Protected NewList lines.s()
 	If now - lastUpdate >= #MinUpdateInterval Or force
@@ -1195,10 +1228,12 @@ DataSection
 	IconDataCommand:
 		IncludeBinary "..\etc\command.ico"
 	IconDataCommandEnd:
+	IconDataCommandAlert:
+		IncludeBinary "..\etc\commandAlert.ico"
+	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 330
-; FirstLine = 287
+; CursorPosition = 34
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

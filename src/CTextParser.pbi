@@ -32,6 +32,7 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
 XIncludeFile "ITextParser.pbi"
 XIncludeFile "IIteratorC.pbi"
 
@@ -1721,8 +1722,7 @@ EndDataSection
 
 EndModule ; CTextParser
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 1253
-; FirstLine = 1233
+; CursorPosition = 34
 ; Folding = ---------
 ; EnableUnicode
 ; EnableXP

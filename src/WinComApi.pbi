@@ -32,6 +32,9 @@
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+EnableExplicit
+
+
 CoInitialize_(#Null) ; may be already initialized by PureBasic (e.g. when using MessageRequester)
 
 
@@ -89,7 +92,7 @@ EndDeclareModule ; WinComApi
 Module WinComApi
 EndModule  ; WinComApi
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 37
 ; Folding = -
 ; EnableUnicode
 ; EnableXP
