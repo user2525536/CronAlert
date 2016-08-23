@@ -5,6 +5,8 @@ Additionally it supports text-to-speech output for acoustic alerts.
 CronAlert realizes audio text output via Windows' SAPI interface. This includes SSML.
 See https://msdn.microsoft.com/en-us/library/ms723627(v=vs.85).aspx#W3C_Speech_Synthesis_Markup_Language
 
+In case of questions contact coolpcfreak at freenet dot de.
+
 How to use
 ==========
 - Create a CronAlert file in a standard text editor
