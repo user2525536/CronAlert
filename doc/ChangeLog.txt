@@ -1,3 +1,7 @@
+Version 1.2.4 (2016-08-31)
+ - added: execute alert by double clicking it in the CronAlert list
+ - added: ETA to systray tooltip
+
 Version 1.2.3 (2016-08-23)
  - added: open with editor menu entry and keyboard shortcut
  - added: pre-alert icon for commands

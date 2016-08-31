@@ -31,6 +31,7 @@
 ;  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;- todo double click -> execute
 
 EnableExplicit
 XIncludeFile "TextToSpeech.pbi"
@@ -115,7 +116,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.3"
+#Version = "1.2.4"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -346,7 +347,15 @@ Repeat
 	Case #PB_Event_Gadget
 		Select EventGadget()
 		Case #GID_AlertList
-			Select EventType()                   
+			Select EventType()
+			Case #PB_EventType_LeftDoubleClick
+				If hasOpenFile
+					i = GetGadgetState(#GID_AlertList)
+					If i >= 0
+						SelectElement(alerts(), i)
+						ExecuteAlert(@alerts(), GetPathPart(openFile))
+					EndIf
+				EndIf
 			Case #PB_EventType_Change
 				ForEach alerts()
 					If GetGadgetItemState(#GID_AlertList, ListIndex(alerts())) & #PB_ListIcon_Checked = #PB_ListIcon_Checked
@@ -861,8 +870,8 @@ EndProcedure
 Procedure.i MainWindowRefresh()
 	Static.i lastTime = -1
 	Protected localTimezone.TIME_ZONE_INFORMATION
-	Protected.i currentTime = Date(), timezoneTime, minDiff, splitPos
-	Protected.s dateTimeStr, aNextEvent, aNextEta, cmdPart, parmPart
+	Protected.i currentTime = Date(), timezoneTime, minDiff
+	Protected.s dateTimeStr, aNextEvent, aNextEta
 	Protected NewList preTriggers.s(), NewMap preTriggerFilter.i()
 	Protected NewList triggers.s()
 	Protected textOutput.s, gotOutput.i
@@ -935,25 +944,7 @@ Procedure.i MainWindowRefresh()
 						AddElement(triggers())
 						triggers() = alerts()\text
 					Case #AlertType_Command
-						parmPart = ""
-						If Left(alerts()\text, 1) = ~"\""
-							splitPos = FindString(alerts()\text, ~"\"", 2)
-							If splitPos = 0
-								cmdPart = Mid(alerts()\text, 2)
-							 Else
-							 	cmdPart = Mid(alerts()\text, 2, splitPos - 2)
-							 	parmPart = Trim(Mid(alerts()\text, splitPos + 1))
-							EndIf
-						Else
-							splitPos = FindString(alerts()\text, " ")
-							If splitPos = 0
-								cmdPart = alerts()\text
-							 Else
-							 	cmdPart = Left(alerts()\text, splitPos)
-							 	parmPart = Mid(alerts()\text, splitPos + 1)
-							EndIf
-						EndIf
-						RunProgram(cmdPart, parmPart, GetPathPart(openFile))
+						ExecuteAlert(@alerts(), GetPathPart(openFile))
 					EndSelect
 				EndIf
 				alerts()\state = #AlertState_Triggered
@@ -964,7 +955,7 @@ Procedure.i MainWindowRefresh()
 		; update systray tooltip
 		If aNextEvent <> nextEvent
 			If IsSysTrayIcon(#STID_Main)
-				SysTrayIconToolTip(#STID_Main, "Next events: " + aNextEvent)
+				SysTrayIconToolTip(#STID_Main, "Next events: " + aNextEvent + " (" + aNextEta + ")")
 			EndIf
 		EndIf
 		; update status bar
@@ -1233,7 +1224,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 957
+; FirstLine = 917
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

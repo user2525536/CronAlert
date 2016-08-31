@@ -35,6 +35,7 @@
 EnableExplicit
 XIncludeFile "CFileIteratorC.pbi"
 XIncludeFile "CTextParser.pbi"
+XIncludeFile "TextToSpeech.pbi"
 
 
 UseModule IIteratorC
@@ -108,6 +109,7 @@ Declare.i ParseNumberGroup(parser.ITextParser, List numGroup.i(), minVal.i, maxV
 Declare.i ParseString(parser.ITextParser, *out.String, *error.String)
 Declare.s GetLineInfo(parser.ITextParser)
 Declare.s LoadCronAlertFile(file.s)
+Declare.i ExecuteAlert(*alert.CronAlert, workingPath.s)
 Declare.i AtExit(callback.AtExitCallback)
 Declare.i ExitProgram()
 
@@ -947,6 +949,44 @@ Procedure.s LoadCronAlertFile(file.s)
 EndProcedure
 
 
+; Execute the given alert.
+;
+; @param[in] *alert - execute this alert
+; @return true on success, else false
+Procedure.i ExecuteAlert(*alert.CronAlert, workingPath.s)
+	Protected.s cmdPart, parmPart
+	Protected.i splitPos
+	If *alert = #Null
+		ProcedureReturn #False
+	EndIf
+	Select *alert\type
+	Case #AlertType_Audio
+		TextToSpeech::Speak(*alert\text, #True)
+	Case #AlertType_Command
+		parmPart = ""
+		If Left(*alert\text, 1) = ~"\""
+			splitPos = FindString(*alert\text, ~"\"", 2)
+			If splitPos = 0
+				cmdPart = Mid(*alert\text, 2)
+			 Else
+			 	cmdPart = Mid(*alert\text, 2, splitPos - 2)
+			 	parmPart = Trim(Mid(*alert\text, splitPos + 1))
+			EndIf
+		Else
+			splitPos = FindString(*alert\text, " ")
+			If splitPos = 0
+				cmdPart = *alert\text
+			 Else
+			 	cmdPart = Left(*alert\text, splitPos)
+			 	parmPart = Mid(*alert\text, splitPos + 1)
+			EndIf
+		EndIf
+		RunProgram(cmdPart, parmPart, GetPathPart(workingPath))
+	EndSelect
+	ProcedureReturn #True
+EndProcedure
+
+
 ; Register a callback which shall be executed on program termination.
 ; The callback shall be without any parameters (not even defaulted ones).
 ; 
@@ -969,7 +1009,7 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; CursorPosition = 37
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

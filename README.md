@@ -9,7 +9,7 @@ In case of questions contact coolpcfreak at freenet dot de.
 
 How to use
 ==========
-- Create a CronAlert file in a standard text editor
+- Create a CronAlert file (.ca) in a standard text editor
 - Start the program
 - Open the created CronAlert file
 
