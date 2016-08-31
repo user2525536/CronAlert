@@ -116,7 +116,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.4"
+#Version = "1.2.5"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -695,20 +695,22 @@ Procedure.i MainWindowUpdateAlertMaskToTime(now.i, offset.i, wday.i, month.i, da
 		EndIf
 	EndIf
 	If day = -1
-		day = Day(now) + offset
+		day = Day(now) - 1 + offset
 		offset = Int(offset / 31)
 		If day >= 31
-			day = ((day - 1) % 31) + 1
+			day % 31
 			offset + 1
 		EndIf
+		day + 1
 	EndIf
 	If month = -1
-		month = Month(now) + offset
+		month = Month(now) - 1 + offset
 		offset = Int(offset / 12)
-		If month >= 31
-			month = ((month - 1) % 12) + 1
+		If month >= 12
+			month % 12
 			offset + 1
 		EndIf
+		month + 1
 	EndIf
 	If offset > 0
 		year + 1
@@ -953,7 +955,7 @@ Procedure.i MainWindowRefresh()
 	Next
 	If aNextEvent <> ""
 		; update systray tooltip
-		If aNextEvent <> nextEvent
+		If aNextEvent <> nextEvent Or aNextEta <> nextEta
 			If IsSysTrayIcon(#STID_Main)
 				SysTrayIconToolTip(#STID_Main, "Next events: " + aNextEvent + " (" + aNextEta + ")")
 			EndIf
@@ -1224,8 +1226,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 957
-; FirstLine = 917
+; CursorPosition = 712
+; FirstLine = 672
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

@@ -1,3 +1,7 @@
+Version 1.2.5 (2016-08-31)
+ - fixed: ETA update in systray tooltip
+ - fixed: wrong handling of 31st day of a month and December
+
 Version 1.2.4 (2016-08-31)
  - added: execute alert by double clicking it in the CronAlert list
  - added: ETA to systray tooltip
