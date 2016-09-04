@@ -118,6 +118,7 @@ Global NewList alerts.CronAlert()
 Global NewList exitCallbacks.i()
 Global Dim weekdays.MapItem(6)
 Global Dim months.MapItem(11)
+Global hasGlobalTimeZone.i = #False, globalTimeZone.i = 0
 
 
 Macro SetMapItem(arr, index, _key, _value)
@@ -716,6 +717,7 @@ Procedure.s LoadCronAlertFile(file.s)
 	result\s = ""
 	GetTimeZoneInformation_(@localTimezone)
 	timezone = -(localTimezone\Bias)
+	hasGlobalTimeZone = #False
 	; open file
 	If file = "" Or FileSize(file) <= 0
 		ProcedureReturn "Failed to read file."
@@ -743,6 +745,7 @@ Procedure.s LoadCronAlertFile(file.s)
 				SkipBlanks(parser)
 				If parser\String("local")
 					timezone = -(localTimezone\Bias)
+					hasGlobalTimeZone = #False
 				ElseIf parser\Num(@timezone)
 					; set timezone in minutes or try to get as 00:00
 					savedIt = parser\CloneStartIterator()
@@ -753,6 +756,8 @@ Procedure.s LoadCronAlertFile(file.s)
 					If parser\CharVal(':')
 						If parser\Num(@number, #False)
 							timezone = (timezone * 60) + number
+							globalTimeZone = timezone
+							hasGlobalTimeZone = #True
 						Else
 							parser\SetStartIterator(savedIt)
 							result\s = GetLineInfo(parser) + ~": Expected <unsigned number> after ':'."
@@ -941,6 +946,8 @@ Procedure.s LoadCronAlertFile(file.s)
 	If result\s = ""
 		ClearList(alerts())
 		CopyList(newAlerts(), alerts())
+	Else
+		hasGlobalTimeZone = #False
 	EndIf
 	; clean-up
 	ClearStructure(@item, CronAlert)
@@ -1009,7 +1016,8 @@ Procedure.i ExitProgram()
 	End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 37
+; CursorPosition = 936
+; FirstLine = 924
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

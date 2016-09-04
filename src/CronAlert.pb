@@ -31,7 +31,6 @@
 ;  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 ;  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 ;  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-;- todo double click -> execute
 
 EnableExplicit
 XIncludeFile "TextToSpeech.pbi"
@@ -116,7 +115,7 @@ EndEnumeration
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.5"
+#Version = "1.2.6"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -872,6 +871,7 @@ EndProcedure
 Procedure.i MainWindowRefresh()
 	Static.i lastTime = -1
 	Protected localTimezone.TIME_ZONE_INFORMATION
+	Protected.i displayTime, displayTimezone
 	Protected.i currentTime = Date(), timezoneTime, minDiff
 	Protected.s dateTimeStr, aNextEvent, aNextEta
 	Protected NewList preTriggers.s(), NewMap preTriggerFilter.i()
@@ -883,11 +883,18 @@ Procedure.i MainWindowRefresh()
 	EndIf
 	lastTime = currentTime
 	GetTimeZoneInformation_(@localTimezone)
-	dateTimeStr = FormatDate("%yyyy-%mm-%dd %hh:%ii:%ss", currentTime)
-	If localTimezone\Bias > 0
-		dateTimeStr + " -" + RSet(Str((localTimezone\Bias) / 60), 2, "0") + ":" + RSet(Str((localTimezone\Bias) % 60), 2, "0")
+	If hasGlobalTimeZone And hasOpenFile
+		displayTime = currentTime + ((localTimezone\Bias + globalTimeZone) * 60)
+		displayTimezone = globalTimeZone
 	Else
-		dateTimeStr + " +" + RSet(Str((-localTimezone\Bias) / 60), 2, "0") + ":" + RSet(Str((-localTimezone\Bias) % 60), 2, "0")
+		displayTime = currentTime
+		displayTimezone = -localTimezone\Bias
+	EndIf
+	dateTimeStr = FormatDate("%yyyy-%mm-%dd %hh:%ii:%ss", displayTime)
+	If displayTimezone > 0
+		dateTimeStr + " +" + RSet(Str(displayTimezone / 60), 2, "0") + ":" + RSet(Str(displayTimezone % 60), 2, "0")
+	Else
+		dateTimeStr + " -" + RSet(Str((-displayTimezone) / 60), 2, "0") + ":" + RSet(Str((-displayTimezone) % 60), 2, "0")
 	EndIf
 	SetGadgetText(#GID_CurrentTimeValue, dateTimeStr)
 	; update alert list
@@ -1226,8 +1233,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 712
-; FirstLine = 672
+; CursorPosition = 117
+; FirstLine = 84
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

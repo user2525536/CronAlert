@@ -1,3 +1,6 @@
+Version 1.2.6 (2016-09-04)
+ - changed: display local time or if given last configured timezone from CronAlert file
+
 Version 1.2.5 (2016-08-31)
  - fixed: ETA update in systray tooltip
  - fixed: wrong handling of 31st day of a month and December
