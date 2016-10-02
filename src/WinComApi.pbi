@@ -92,7 +92,8 @@ EndDeclareModule ; WinComApi
 Module WinComApi
 EndModule  ; WinComApi
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 37
+; CursorPosition = 86
+; FirstLine = 31
 ; Folding = -
 ; EnableUnicode
 ; EnableXP

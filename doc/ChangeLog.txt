@@ -1,3 +1,8 @@
+Version 1.3.0 (2016-10-02)
+ - added: log window
+ - added: shortcut H to hide the main window
+ - added: list item tooltip for items with cut-off text
+
 Version 1.2.6 (2016-09-04)
  - changed: display local time or if given last configured timezone from CronAlert file
 

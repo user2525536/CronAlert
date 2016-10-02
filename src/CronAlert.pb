@@ -34,12 +34,14 @@
 
 EnableExplicit
 XIncludeFile "TextToSpeech.pbi"
+XIncludeFile "ListIconItemTooltip.pbi"
 XIncludeFile "Utility.pbi"
 
 
 Enumeration ; Windows
 	#WID_Main
 	#WID_VolumneRequester
+	#WID_Log
 EndEnumeration
 
 
@@ -52,6 +54,9 @@ Enumeration ; Gadgets
  	#GID_VolumeTest
  	#GID_VolumeOk
  	#GID_VolumeCancel
+ 	#GID_LogList
+ 	#GID_LogClear
+ 	#GID_LogClose
 EndEnumeration
 
 
@@ -60,6 +65,15 @@ Enumeration ; AlertList columns
 	#CID_AlertList_ETA
 	#CID_AlertList_Name
 	#CID_AlertList_Text
+EndEnumeration
+
+
+Enumeration ; LogList columns
+	#CID_LogList_Type
+	#CID_LogList_DateTime
+	#CID_LogList_Event
+	#CID_LogList_Muted
+	#CID_LogList_File
 EndEnumeration
 
 
@@ -82,12 +96,16 @@ Enumeration ; Menu Items
  	#MIID_OpenLastFileOnStart
  	#MIID_ReloadOnChange
  	#MIID_Exit
+ 	#MIID_Hide
  	#MIID_VolumeCheck
  	#MIID_Mute
  	#MIID_ChangeVolume
+ 	#MIID_Log
  	#MIID_About
  	#MIID_VolumeCheckOk
  	#MIID_VolumeCheckCancel
+ 	#MIID_LogClear
+ 	#MIID_LogClose
 EndEnumeration
 
 
@@ -112,10 +130,14 @@ EndEnumeration
 #WinMinWidth = 320
 #WinMinHeight = 240
 #MinUpdateInterval = 5 ; seconds
+#MaxLogEntries = 50
+#LogWinMinWidth = 480
+#LogWinMinHeight = 300
 #ConfigFileVersion1 = $CA000001
 #ConfigFileVersion2 = $CA000002
-#ConfigFileVersion = #ConfigFileVersion2
-#Version = "1.2.6"
+#ConfigFileVersion3 = $CA000003
+#ConfigFileVersion = #ConfigFileVersion3
+#Version = "1.3.0"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -136,6 +158,9 @@ Declare.i MainWindowUpdateCronAlert(force.i = #False)
 Declare.i MainWindowLoadCronAlert(file.s)
 Declare.i MainWindowCloseCronAlert()
 Declare.i MainWindowCleanUp()
+Declare.i LogWindowAddLog(currentTime.i, *entry.CronAlert)
+Declare.i LogWindowResizeGadgets()
+Declare.i LogWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
 
 
 Global.i windowXDif, windowYDif, lastWinX, lastWinY, lastWinW, lastWinH, newWinState = #PB_Window_Normal
@@ -150,6 +175,8 @@ Global.i hasOpenFile = #False, openFileModDate = 0, hasLastFile = #False, reload
 Global.i iconAudio, iconAudioAlert, iconCommand, iconCommandAlert
 Define.s file, forcedFile
 Define.i forcedVolume
+Define.i logIsHidden = #True
+Global.i logWindowXDif, logWindowYDif
 Define.i i, forceOpenFile = #False, forceTray = #False, forceMuted = #False, forceVolume = #False
 Define   winRect.RECT
 
@@ -241,6 +268,8 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 		MenuItem(#MIID_ChangeVolume, ~"&Change volume\tC")
 		MenuItem(#MIID_Mute, ~"&Mute\tM")
 		MenuTitle("&Help")
+		MenuItem(#MIID_Log, ~"&Log\tL")
+		MenuBar()
 		MenuItem(#MIID_About, ~"&About\tF1")
 	EndIf
 	If CreatePopupMenu(#MID_SysTray)
@@ -254,9 +283,11 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_F2, #MIID_OpenLastFile)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_E, #MIID_OpenWithEditor)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_Control | #PB_Shortcut_C, #MIID_Close)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_H, #MIID_Hide)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_T, #MIID_VolumeCheck)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_C, #MIID_ChangeVolume)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_M, #MIID_Mute)
+	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_L, #MIID_Log)
 	AddKeyboardShortcut(#WID_Main, #PB_Shortcut_F1, #MIID_About)
 	If CreateStatusBar(#SBID_Main, WindowID(#WID_Main))
 		AddStatusBarField(80)
@@ -270,15 +301,17 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 	StringGadget(#GID_CurrentTimeValue, 90, 13, 120, 14, "", #PB_String_BorderLess | #PB_String_ReadOnly)
 	ListIconGadget(#GID_AlertList, 0, 40, 320, 200 - MenuHeight() - StatusBarHeight(#SBID_Main), "Type", 40, #PB_ListIcon_CheckBoxes | #PB_ListIcon_GridLines | #PB_ListIcon_FullRowSelect | #LVS_EX_FLATSB)
 	AddGadgetColumn(#GID_AlertList, #CID_AlertList_ETA, "ETA", 60)
-	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Name, "name", 70)
-	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Text, "text", 130)
+	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Name, "Name", 70)
+	AddGadgetColumn(#GID_AlertList, #CID_AlertList_Text, "Text", 130)
+	ListIconItemTooltip::Set(#GID_AlertList)
 	AddSysTrayIcon(#STID_Main, WindowID(#WID_Main), icon)
 Else
-	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	MessageRequester("Error", "Failed to create main window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 	ExitProgram()
 EndIf
 
 
+;- Volume
 If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
  	TrackBarGadget(#GID_VolumeBar, 10, 20, 170, 20, 0, 100)
 	TextGadget(#GID_VolumeLabel, 190, 23, 40, 14, "-%")
@@ -288,7 +321,26 @@ If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | 
  	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Return, #MIID_VolumeCheckOk)
  	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Escape, #MIID_VolumeCheckCancel)
 Else
-	MessageRequester("Error", "Failed to create window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	MessageRequester("Error", "Failed to create volume requester window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
+	ExitProgram()
+EndIf
+
+
+;- Log
+If OpenWindow(#WID_Log, 0, 0, 480, 300, "Log", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible | #PB_Window_SizeGadget, WindowID(#WID_Main))
+ 	ListIconGadget(#GID_LogList, 10, 10, 460, 250, "Type", 40, #PB_ListIcon_GridLines | #PB_ListIcon_FullRowSelect | #LVS_EX_FLATSB)
+ 	AddGadgetColumn(#GID_LogList, #CID_LogList_DateTime, "Date/Time", 120)
+ 	AddGadgetColumn(#GID_LogList, #CID_LogList_Event, "Event", 120)
+ 	AddGadgetColumn(#GID_LogList, #CID_LogList_Muted, "Muted", 50)
+ 	AddGadgetColumn(#GID_LogList, #CID_LogList_File, "File", 100)
+ 	ListIconItemTooltip::Set(#GID_LogList)
+ 	ButtonGadget(#GID_LogClear, 340, 270, 60, 20, "Clear")
+ 	GadgetToolTip(#GID_LogClear, "CTRL-D")
+ 	ButtonGadget(#GID_LogClose, 410, 270, 60, 20, "Close", #PB_Button_Default)
+ 	AddKeyboardShortcut(#WID_Log, #PB_Shortcut_Control | #PB_Shortcut_D, #MIID_LogClear)
+ 	AddKeyboardShortcut(#WID_Log, #PB_Shortcut_Escape, #MIID_LogClose)
+Else
+	MessageRequester("Error", "Failed to create log window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 	ExitProgram()
 EndIf
 
@@ -297,10 +349,16 @@ GetWindowRect_(WindowID(#WID_Main), winRect)
 windowXDif = winRect\right - winRect\left - WindowWidth(#WID_Main)
 windowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Main)
 
+GetWindowRect_(WindowID(#WID_Log), winRect)
+logWindowXDif = winRect\right - winRect\left - WindowWidth(#WID_Log)
+logWindowYDif = winRect\bottom - winRect\top - WindowHeight(#WID_Log)
+
 EnableWindowDrop(#WID_Main, #PB_Drop_Files, #PB_Drag_Copy)
-SetWindowCallback(@MainWindowCallback())
+SetWindowCallback(@MainWindowCallback(), #WID_Main)
+SetWindowCallback(@LogWindowCallback(), #WID_Log)
 MainWindowResizeGadgets()
 MainWindowRefresh()
+LogWindowResizeGadgets()
 ; AddWindowTimer() does not work while we are processing window events
 SetTimer_(WindowID(#WID_Main), #TID_Refresh, 500, #Null)
 
@@ -384,6 +442,11 @@ Repeat
 		Case #GID_VolumeCancel
 			HideWindow(#WID_VolumneRequester, #True)
 			DisableWindow(#WID_Main, #False)
+		Case #GID_LogClear
+			ClearGadgetItems(#GID_LogList)
+		Case #GID_LogClose
+			HideWindow(#WID_Log, #True)
+			logIsHidden = #True
 		EndSelect
 	Case #PB_Event_Menu
 		Select EventMenu()
@@ -425,6 +488,9 @@ Repeat
 		Case #MIID_Exit
 			TextToSpeech::DeInitialize()
 			ExitProgram()
+		Case #MIID_Hide
+			mainWindowIsHidden = #True
+			HideWindow(#WID_Main, mainWindowIsHidden)
 		Case #MIID_VolumeCheck
 			TextToSpeech::Speak("this is a volume check", #True)
 		Case #MIID_Mute
@@ -445,6 +511,16 @@ Repeat
 				#PB_Ignore, #PB_Ignore)
 			HideWindow(#WID_VolumneRequester, #False)
 			SetActiveGadget(#GID_VolumeOk)
+		Case #MIID_Log
+			If logIsHidden
+				ResizeWindow(#WID_Log,
+					WindowX(#WID_Main) + (WindowWidth(#WID_Main) - WindowWidth(#WID_Log)) / 2,
+					WindowY(#WID_Main) + (WindowHeight(#WID_Main) - WindowHeight(#WID_Log)) / 2,
+					#PB_Ignore, #PB_Ignore)
+				HideWindow(#WID_Log, #False)
+				SetActiveGadget(#GID_LogClose)
+				logIsHidden = #False
+			EndIf
 		Case #MIID_About
 			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
 		Case #MIID_VolumeCheckOk
@@ -455,6 +531,11 @@ Repeat
 		Case #MIID_VolumeCheckCancel
 			HideWindow(#WID_VolumneRequester, #True)
 			DisableWindow(#WID_Main, #False)
+		Case #MIID_LogClear
+			ClearGadgetItems(#GID_LogList)
+		Case #MIID_LogClose
+			HideWindow(#WID_Log, #True)
+			logIsHidden = #True
 		EndSelect
 	Case #PB_Event_WindowDrop
 		Select EventDropType()
@@ -492,6 +573,7 @@ ForEver
 Procedure.i MainWindowLoadUserConfig()
 	Protected.s lastFile
 	Protected.i fileId, version, winState, winX, winY, winW, winH
+	Protected.i logWinW, logWinH
 	If FileSize(GetUserConfigPath() + #UserConfig) < 0
 		;MessageRequester("Error", ~"User configuration file not found.\n" + GetUserConfigPath() + #UserConfig, #PB_MessageRequester_Ok | #MB_ICONERROR)
 		ProcedureReturn
@@ -504,7 +586,7 @@ Procedure.i MainWindowLoadUserConfig()
 	If IsFile(fileId)
 		version = BSwap32(ReadLong(fileId) & $FFFFFFFF)
 		Select version
-		Case #ConfigFileVersion1, #ConfigFileVersion2
+		Case #ConfigFileVersion1, #ConfigFileVersion2, #ConfigFileVersion3
 			winState = ReadLong(fileId) & $FFFFFFFF
 			winX = ReadLong(fileId) & $FFFFFFFF
 			winY = ReadLong(fileId) & $FFFFFFFF
@@ -514,7 +596,17 @@ Procedure.i MainWindowLoadUserConfig()
 			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_ETA)
 			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_Name)
 			SetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_AlertList_Text)
-			If version = #ConfigFileVersion2
+			If version >= #ConfigFileVersion3
+				logWinW = ReadLong(fileId) & $FFFFFFFF
+				logWinH = ReadLong(fileId) & $FFFFFFFF
+				SetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_LogList_Type)
+				SetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_LogList_DateTime)
+				SetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_LogList_Event)
+				SetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_LogList_Muted)
+				SetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, ReadLong(fileId) & $FFFFFFFF, #CID_LogList_File)
+				ResizeWindow(#WID_Log, #PB_Ignore, #PB_Ignore, logWinW, logWinH)
+			EndIf
+			If version >= #ConfigFileVersion2
 				If ReadByte(fileId) <> 0
 					isMuted = #True
 				Else
@@ -543,6 +635,7 @@ Procedure.i MainWindowLoadUserConfig()
 			EndIf
 			MainWindowUpdateSizes()
 			MainWindowResizeGadgets()
+			LogWindowResizeGadgets()
 		EndSelect
 		CloseFile(fileId)
 	Else
@@ -600,6 +693,13 @@ Procedure.i MainWindowSaveUserConfig()
 		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_ETA))
 		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_Name))
 		WriteLong(fileId, GetGadgetItemAttribute(#GID_AlertList, 0, #PB_ListIcon_ColumnWidth, #CID_AlertList_Text))
+		WriteLong(fileId, WindowWidth(#WID_Log))
+		WriteLong(fileId, WindowHeight(#WID_Log))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, #CID_LogList_Type))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, #CID_LogList_DateTime))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, #CID_LogList_Event))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, #CID_LogList_Muted))
+		WriteLong(fileId, GetGadgetItemAttribute(#GID_LogList, 0, #PB_ListIcon_ColumnWidth, #CID_LogList_File))
 		WriteByte(fileId, isMuted)
 		WriteWord(fileId, volume)
 		WriteByte(fileId, loadLastFile)
@@ -947,6 +1047,7 @@ Procedure.i MainWindowRefresh()
 					SetGadgetItemImage(#GID_AlertList, ListIndex(alerts()), ImageID(iconCommandAlert))
 				EndSelect
 			ElseIf alerts()\eta <= alerts()\preTrigger And Not alerts()\state = #AlertState_Triggered
+				LogWindowAddLog(currentTime, @alerts())
 				If alerts()\enabled
 					Select alerts()\type
 					Case #AlertType_Audio
@@ -1217,6 +1318,78 @@ Procedure.i MainWindowCleanUp()
 EndProcedure
 
 
+; Add log entry.
+Procedure.i LogWindowAddLog(currentTime.i, *entry.CronAlert)
+	Protected muted.s, icon.i
+	If *entry = #Null
+		ProcedureReturn #False
+	EndIf
+	If isMuted
+		muted = "true"
+	Else
+		muted = "false"
+	EndIf
+	If *entry\enabled
+		Select *entry\type
+		Case #AlertType_Audio
+			icon = ImageID(iconAudioAlert)
+		Case #AlertType_Command
+			icon = ImageID(iconCommandAlert)
+		EndSelect
+	Else
+		Select *entry\type
+		Case #AlertType_Audio
+			icon = ImageID(iconAudio)
+		Case #AlertType_Command
+			icon = ImageID(iconCommand)
+		EndSelect
+	EndIf
+	AddGadgetItem(#GID_LogList, 0, Chr(10) + FormatDate("%yyyy-%mm-%dd %hh:%ii:%ss", currentTime) + Chr(10) + *entry\name + Chr(10) + muted + Chr(10) + openFile + ":" + Str(*entry\line), icon)
+	While CountGadgetItems(#GID_LogList) > #MaxLogEntries
+		RemoveGadgetItem(#GID_LogList, CountGadgetItems(#GID_LogList) - 1)
+	Wend
+	ProcedureReturn #True
+EndProcedure
+
+
+; Resize gadgets after the window was resized.
+Procedure.i LogWindowResizeGadgets()
+	ResizeGadget(#GID_LogList, #PB_Ignore, #PB_Ignore, WindowWidth(#WID_Log) - 20, WindowHeight(#WID_Log) - 50)
+	ResizeGadget(#GID_LogClear, WindowWidth(#WID_Log) - 140, WindowHeight(#WID_Log) - 30, #PB_Ignore, #PB_Ignore)
+	ResizeGadget(#GID_LogClose, WindowWidth(#WID_Log) - 70, WindowHeight(#WID_Log) - 30, #PB_Ignore, #PB_Ignore)
+EndProcedure
+
+
+; Window callback called when changes are applied
+; to the log window.
+; 
+; @param[in] hWnd - window handle
+; @param[in] uMsg - message to process
+; @param[in] wParam - wParam value
+; @param[in] lParam - lParam value
+; @return #PB_ProcessPureBasicEvents to pass the value to its original handler
+Procedure.i LogWindowCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
+	Protected result.i = #PB_ProcessPureBasicEvents
+	Protected *lprc.RECT
+	Select uMsg
+	Case #WM_SIZE
+		; handle layouting
+		LogWindowResizeGadgets()
+	Case #WM_SIZING
+		*lprc = lParam
+		If (*lprc\right - *lprc\left < #LogWinMinWidth + logWindowXDif)
+			*lprc\right = *lprc\left + #LogWinMinWidth + logWindowXDif
+			UpdateWindow_(hWnd)
+		EndIf
+		If (*lprc\bottom - *lprc\top < #LogWinMinHeight + logWindowYDif)
+			*lprc\bottom = *lprc\top + #LogWinMinHeight + logWindowYDif
+			UpdateWindow_(hWnd)
+		EndIf
+	EndSelect
+	ProcedureReturn result
+EndProcedure
+
+
 ;- Data
 DataSection
 	IconDataAudio:
@@ -1233,8 +1406,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 117
-; FirstLine = 84
+; CursorPosition = 335
+; FirstLine = 286
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
