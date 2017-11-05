@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.42 LTS (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.61 (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="CronAlert"/>
     <comment>Copyright 2016 pcfreak</comment>
@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2016-10-03 00:44" user="pcfreak" host="D4"/>
+    <lastopen date="2017-11-05 12:58" user="John" host="DESKTOP"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
@@ -17,7 +17,7 @@
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="2fff4e45dfa44eca01c0ff72a9101a78"/>
+      <fingerprint md5="b891410b34384d431df2fbb727877ae1"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
