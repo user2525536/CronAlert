@@ -38,6 +38,10 @@ XIncludeFile "ListIconItemTooltip.pbi"
 XIncludeFile "Utility.pbi"
 
 
+; run only one instance of this application
+If CreateMutex_(0, 1, GetFilePart(ProgramFilename(), #PB_FileSystem_NoExtension)) = 0 Or GetLastError_() <> 0 : End : EndIf
+
+
 Enumeration ; Windows
 	#WID_Main
 	#WID_VolumeRequester
@@ -1405,10 +1409,10 @@ DataSection
 		IncludeBinary "..\etc\commandAlert.ico"
 	IconDataCommandAlertEnd:
 EndDataSection
-; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 335
-; FirstLine = 286
+; IDE Options = PureBasic 5.61 (Windows - x64)
+; CursorPosition = 245
+; FirstLine = 222
 ; Folding = ----
-; EnableUnicode
 ; EnableXP
 ; HideErrorLog
+; EnableUnicode

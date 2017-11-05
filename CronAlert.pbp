@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2017-11-04 15:05" user="John" host="DESKTOP"/>
+    <lastopen date="2017-11-05 12:58" user="John" host="DESKTOP"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
@@ -17,7 +17,7 @@
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="5e240123ad1d00a8a6d1c0d779f95099"/>
+      <fingerprint md5="b891410b34384d431df2fbb727877ae1"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
