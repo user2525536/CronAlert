@@ -1,7 +1,7 @@
 ﻿; COPYRIGHT
 ; ---------
 ; 
-; CronAlert Copyright (c) 2016 pcfreak
+; CronAlert Copyright (c) 2016-2017 pcfreak
 ; 
 ; Redistribution and use in source and binary forms, with or without
 ; modification, are permitted provided that the following conditions
@@ -226,8 +226,8 @@ EndDataSection
 
 
 EndModule ; CStringIteratorC
-; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 34
+; IDE Options = PureBasic 5.45 LTS (Windows - x64)
+; CursorPosition = 3
 ; Folding = ---
 ; EnableUnicode
 ; EnableXP

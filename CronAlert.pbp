@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.42 LTS (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.45 LTS (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="CronAlert"/>
     <comment>Copyright 2016 pcfreak</comment>
@@ -8,48 +8,48 @@
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2016-10-03 00:44" user="pcfreak" host="D4"/>
+    <lastopen date="2017-11-19 15:49" user="pcfreak" host="D4"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="42d5c4524475356f4ae29ee1424e7e0a"/>
+      <fingerprint md5="36ad7ab427dd31859172354cd6847930"/>
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="2fff4e45dfa44eca01c0ff72a9101a78"/>
+      <fingerprint md5="a85def1a0e1e0fb31869ffd784b54624"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="61e810d3570e247222368194aae65a94"/>
+      <fingerprint md5="e64c181082c4c85ec24bbc3d4d0c04eb"/>
     </file>
     <file name="src\CTextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="d7f4eb886aa39bfb38e76097fb6a6530"/>
+      <fingerprint md5="48baba8dd7e0751cca3659a2131599ff"/>
     </file>
     <file name="src\IIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="879e497610553a966e3914c4f9e63ec6"/>
+      <fingerprint md5="57ac3473e7a2b935dd3a64fcd5052c70"/>
     </file>
     <file name="src\ITextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="55edb77a14fc65945946e86a39f01242"/>
+      <fingerprint md5="8528e3aa5a069f5b4b010abdb9100c8e"/>
     </file>
     <file name="src\ListIconItemTooltip.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="b85c11feb5844ea52a527fdab62925d1"/>
+      <fingerprint md5="8cde0c2d80412a8edd697ad3e5a55cd1"/>
     </file>
     <file name="src\TextToSpeech.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="01d8c5ebe29992bd511ff62aaa189485"/>
+      <fingerprint md5="c94a526025b22efba296f6d7fa7d743f"/>
     </file>
     <file name="src\Utility.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="b5503a7f8c2a77a584f85a304bcbbe4f"/>
+      <fingerprint md5="d3da22ab234ec8e2df0793bd4bad6560"/>
     </file>
     <file name="src\WinComApi.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="df68890c9a46d5203c780f2a8f5e7738"/>
+      <fingerprint md5="f7d6e330533fa6b31b94b30c04e0ea09"/>
     </file>
   </section>
   <section name="targets">
@@ -67,16 +67,16 @@
       <options unicode="1" thread="1" xpskin="1"/>
       <icon enable="1">etc\main.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1,3,0,0"/>
-        <field1 value="1,3,0,0"/>
+        <field0 value="1,3,1,0"/>
+        <field1 value="1,3,1,0"/>
         <field2 value="pcfreak"/>
         <field3 value="CronAlert"/>
-        <field4 value="1.3.0"/>
-        <field5 value="1.3.0"/>
+        <field4 value="1.3.1"/>
+        <field5 value="1.3.1"/>
         <field6 value="CronAlert"/>
         <field7 value="CronAlert"/>
         <field8 value="CronAlert"/>
-        <field9 value="Copyright 2016 pcfreak"/>
+        <field9 value="Copyright 2016-2017 pcfreak"/>
         <field14 value="http://pcfreak.privatedns.org:8085/proggys/"/>
         <field16 value="VFT_APP"/>
         <field17 value="0409 English (United States)"/>

@@ -1,7 +1,7 @@
 ﻿; COPYRIGHT
 ; ---------
 ; 
-; CronAlert Copyright (c) 2016 pcfreak
+; CronAlert Copyright (c) 2016-2017 pcfreak
 ; 
 ; Redistribution and use in source and binary forms, with or without
 ; modification, are permitted provided that the following conditions
@@ -40,7 +40,7 @@ XIncludeFile "Utility.pbi"
 
 Enumeration ; Windows
 	#WID_Main
-	#WID_VolumneRequester
+	#WID_VolumeRequester
 	#WID_Log
 EndEnumeration
 
@@ -137,7 +137,7 @@ EndEnumeration
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion3 = $CA000003
 #ConfigFileVersion = #ConfigFileVersion3
-#Version = "1.3.0"
+#Version = "1.3.1"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -256,7 +256,7 @@ If OpenWindow(#WID_Main, 0, 0, 320, 240, mainWindowTitle, #PB_Window_SystemMenu 
 		MenuTitle("&File")
 		MenuItem(#MIID_Open, ~"&Open\tCtrl+O")
 		MenuItem(#MIID_OpenLastFile, ~"Open l&ast file\tF2")
-		MenuItem(#MIID_OpenWithEditor, ~"Open with &editor\tCTRL-E")
+		MenuItem(#MIID_OpenWithEditor, ~"Open with &editor\tCtrl-E")
 		MenuItem(#MIID_Close, ~"&Close\tCtrl+C")
 		MenuBar()
 		MenuItem(#MIID_OpenLastFileOnStart, "Open &last file on start")
@@ -312,14 +312,14 @@ EndIf
 
 
 ;- Volume
-If OpenWindow(#WID_VolumneRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
+If OpenWindow(#WID_VolumeRequester, 0, 0, 300, 90, "Volume", #PB_Window_Tool | #PB_Window_WindowCentered | #PB_Window_Invisible, WindowID(#WID_Main))
  	TrackBarGadget(#GID_VolumeBar, 10, 20, 170, 20, 0, 100)
 	TextGadget(#GID_VolumeLabel, 190, 23, 40, 14, "-%")
  	ButtonGadget(#GID_VolumeTest, 230, 20, 60, 20, "Test")
  	ButtonGadget(#GID_VolumeOk, 160, 60, 60, 20, "OK", #PB_Button_Default)
  	ButtonGadget(#GID_VolumeCancel, 230, 60, 60, 20, "Cancel")
- 	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Return, #MIID_VolumeCheckOk)
- 	AddKeyboardShortcut(#WID_VolumneRequester, #PB_Shortcut_Escape, #MIID_VolumeCheckCancel)
+ 	AddKeyboardShortcut(#WID_VolumeRequester, #PB_Shortcut_Return, #MIID_VolumeCheckOk)
+ 	AddKeyboardShortcut(#WID_VolumeRequester, #PB_Shortcut_Escape, #MIID_VolumeCheckCancel)
 Else
 	MessageRequester("Error", "Failed to create volume requester window.", #PB_MessageRequester_Ok | #MB_ICONERROR)
 	ExitProgram()
@@ -335,7 +335,7 @@ If OpenWindow(#WID_Log, 0, 0, 480, 300, "Log", #PB_Window_Tool | #PB_Window_Wind
  	AddGadgetColumn(#GID_LogList, #CID_LogList_File, "File", 100)
  	ListIconItemTooltip::Set(#GID_LogList)
  	ButtonGadget(#GID_LogClear, 340, 270, 60, 20, "Clear")
- 	GadgetToolTip(#GID_LogClear, "CTRL-D")
+ 	GadgetToolTip(#GID_LogClear, "Ctrl-D")
  	ButtonGadget(#GID_LogClose, 410, 270, 60, 20, "Close", #PB_Button_Default)
  	AddKeyboardShortcut(#WID_Log, #PB_Shortcut_Control | #PB_Shortcut_D, #MIID_LogClear)
  	AddKeyboardShortcut(#WID_Log, #PB_Shortcut_Escape, #MIID_LogClose)
@@ -437,10 +437,10 @@ Repeat
 		Case #GID_VolumeOk
 			volume = GetGadgetState(#GID_VolumeBar)
 			TextToSpeech::SetVolume(volume)
-			HideWindow(#WID_VolumneRequester, #True)
+			HideWindow(#WID_VolumeRequester, #True)
 			DisableWindow(#WID_Main, #False)
 		Case #GID_VolumeCancel
-			HideWindow(#WID_VolumneRequester, #True)
+			HideWindow(#WID_VolumeRequester, #True)
 			DisableWindow(#WID_Main, #False)
 		Case #GID_LogClear
 			ClearGadgetItems(#GID_LogList)
@@ -505,11 +505,11 @@ Repeat
 			SetGadgetState(#GID_VolumeBar, volume)
 			SetGadgetText(#GID_VolumeLabel, Str(volume) + "%")
 			DisableWindow(#WID_Main, #True)
-			ResizeWindow(#WID_VolumneRequester,
-				WindowX(#WID_Main) + (WindowWidth(#WID_Main) - WindowWidth(#WID_VolumneRequester)) / 2,
-				WindowY(#WID_Main) + (WindowHeight(#WID_Main) - WindowHeight(#WID_VolumneRequester)) / 2,
+			ResizeWindow(#WID_VolumeRequester,
+				WindowX(#WID_Main) + (WindowWidth(#WID_Main) - WindowWidth(#WID_VolumeRequester)) / 2,
+				WindowY(#WID_Main) + (WindowHeight(#WID_Main) - WindowHeight(#WID_VolumeRequester)) / 2,
 				#PB_Ignore, #PB_Ignore)
-			HideWindow(#WID_VolumneRequester, #False)
+			HideWindow(#WID_VolumeRequester, #False)
 			SetActiveGadget(#GID_VolumeOk)
 		Case #MIID_Log
 			If logIsHidden
@@ -522,14 +522,14 @@ Repeat
 				logIsHidden = #False
 			EndIf
 		Case #MIID_About
-			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
+			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016-2017 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
 		Case #MIID_VolumeCheckOk
 			volume = GetGadgetState(#GID_VolumeBar)
 			TextToSpeech::SetVolume(volume)
-			HideWindow(#WID_VolumneRequester, #True)
+			HideWindow(#WID_VolumeRequester, #True)
 			DisableWindow(#WID_Main, #False)
 		Case #MIID_VolumeCheckCancel
-			HideWindow(#WID_VolumneRequester, #True)
+			HideWindow(#WID_VolumeRequester, #True)
 			DisableWindow(#WID_Main, #False)
 		Case #MIID_LogClear
 			ClearGadgetItems(#GID_LogList)
@@ -1405,9 +1405,9 @@ DataSection
 		IncludeBinary "..\etc\commandAlert.ico"
 	IconDataCommandAlertEnd:
 EndDataSection
-; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 335
-; FirstLine = 286
+; IDE Options = PureBasic 5.45 LTS (Windows - x64)
+; CursorPosition = 189
+; FirstLine = 129
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP

@@ -106,5 +106,5 @@ voice output.
 ```
 15,45 10-14 */2 * * "event" !"notepad.exe" "open_this_file.txt"
 ```
-Open the file "open_this_file.txt" with notepad every second day between 10:00 and 14:00 if the  
+Open the file "open_this_file.txt" with notepad every other day between 10:00 and 14:00 if the  
 current minute is 15 or 45.

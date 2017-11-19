@@ -1,7 +1,7 @@
 ﻿; COPYRIGHT
 ; ---------
 ; 
-; CronAlert Copyright (c) 2016 pcfreak
+; CronAlert Copyright (c) 2016-2017 pcfreak
 ; 
 ; Redistribution and use in source and binary forms, with or without
 ; modification, are permitted provided that the following conditions
@@ -1015,9 +1015,8 @@ Procedure.i ExitProgram()
 	Next
 	End
 EndProcedure
-; IDE Options = PureBasic 5.42 LTS (Windows - x64)
-; CursorPosition = 936
-; FirstLine = 924
+; IDE Options = PureBasic 5.45 LTS (Windows - x64)
+; CursorPosition = 3
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
