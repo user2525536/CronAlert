@@ -3,53 +3,53 @@
 <project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.45 LTS (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="CronAlert"/>
-    <comment>Copyright 2016 pcfreak</comment>
+    <comment>Copyright 2016-2019 pcfreak</comment>
   </section>
   <section name="data">
     <explorer view="D:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2017-11-19 15:49" user="pcfreak" host="D4"/>
+    <lastopen date="2019-12-19 22:56" user="pcfreak" host="D4"/>
   </section>
   <section name="files">
     <file name="src\CFileIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="36ad7ab427dd31859172354cd6847930"/>
+      <fingerprint md5="45477059229be8b28fa5b762a1f820ca"/>
     </file>
     <file name="src\CronAlert.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="a85def1a0e1e0fb31869ffd784b54624"/>
+      <fingerprint md5="9a90e9c17bdc0a9cf2f85eb5e4cfb758"/>
     </file>
     <file name="src\CStringIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="e64c181082c4c85ec24bbc3d4d0c04eb"/>
+      <fingerprint md5="5112f2cde60c700cf32b2a0190daf17b"/>
     </file>
     <file name="src\CTextParser.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="48baba8dd7e0751cca3659a2131599ff"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="7e01124e5a8b88721379e9c3c632b0c5"/>
     </file>
     <file name="src\IIteratorC.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="57ac3473e7a2b935dd3a64fcd5052c70"/>
+      <fingerprint md5="cc37e8d948110d06232a30667b0cb8c1"/>
     </file>
     <file name="src\ITextParser.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="8528e3aa5a069f5b4b010abdb9100c8e"/>
+      <fingerprint md5="94c1a0ca8a43787021044c9473f19fd4"/>
     </file>
     <file name="src\ListIconItemTooltip.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="8cde0c2d80412a8edd697ad3e5a55cd1"/>
+      <fingerprint md5="d2b10aec88bd8291d1afa6734ba6e267"/>
     </file>
     <file name="src\TextToSpeech.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="c94a526025b22efba296f6d7fa7d743f"/>
+      <fingerprint md5="8d1d039370aef2baf0aaf0e53c9c5df2"/>
     </file>
     <file name="src\Utility.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="d3da22ab234ec8e2df0793bd4bad6560"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="ce09a4669671240cf0ed6a62d58fd98d"/>
     </file>
     <file name="src\WinComApi.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="f7d6e330533fa6b31b94b30c04e0ea09"/>
+      <fingerprint md5="08a88a310f27e62a924c91e742ebf359"/>
     </file>
   </section>
   <section name="targets">
@@ -67,16 +67,16 @@
       <options unicode="1" thread="1" xpskin="1"/>
       <icon enable="1">etc\main.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1,3,1,0"/>
-        <field1 value="1,3,1,0"/>
+        <field0 value="1,3,2,0"/>
+        <field1 value="1,3,2,0"/>
         <field2 value="pcfreak"/>
         <field3 value="CronAlert"/>
-        <field4 value="1.3.1"/>
-        <field5 value="1.3.1"/>
+        <field4 value="1.3.2"/>
+        <field5 value="1.3.2"/>
         <field6 value="CronAlert"/>
         <field7 value="CronAlert"/>
         <field8 value="CronAlert"/>
-        <field9 value="Copyright 2016-2017 pcfreak"/>
+        <field9 value="Copyright 2016-2019 pcfreak"/>
         <field14 value="http://pcfreak.privatedns.org:8085/proggys/"/>
         <field16 value="VFT_APP"/>
         <field17 value="0409 English (United States)"/>

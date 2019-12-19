@@ -1,7 +1,7 @@
 ﻿; COPYRIGHT
 ; ---------
 ; 
-; CronAlert Copyright (c) 2016-2017 pcfreak
+; CronAlert Copyright (c) 2016-2019 pcfreak
 ; 
 ; Redistribution and use in source and binary forms, with or without
 ; modification, are permitted provided that the following conditions
@@ -137,7 +137,7 @@ EndEnumeration
 #ConfigFileVersion2 = $CA000002
 #ConfigFileVersion3 = $CA000003
 #ConfigFileVersion = #ConfigFileVersion3
-#Version = "1.3.1"
+#Version = "1.3.2"
 
 
 Declare.i MainWindowLoadUserConfig()
@@ -193,7 +193,7 @@ For i = 0 To CountProgramParameters() - 1
 	Select LCase(clParam)
 	Case "-h", "/h", "/?", "--help", "/help"
 		clParam = ~"CronAlert -hmtv [file]\n"
-		clParam = ~"CronAlert -s text\n\n"
+		clParam + ~"CronAlert -s text\n\n"
 		clParam + ~" -h, --help\n"
 		clParam + ~"     Display this help.\n"
 		clParam + ~" -m, --mute\n"
@@ -1406,8 +1406,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.45 LTS (Windows - x64)
-; CursorPosition = 189
-; FirstLine = 129
+; CursorPosition = 139
+; FirstLine = 99
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
