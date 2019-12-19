@@ -522,7 +522,7 @@ Repeat
 				logIsHidden = #False
 			EndIf
 		Case #MIID_About
-			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016-2017 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
+			MessageRequester("About", "CronAlert " + #Version+ ~"\n\n© Copyright 2016-2019 pcfreak", #PB_MessageRequester_Ok | #MB_ICONINFORMATION)
 		Case #MIID_VolumeCheckOk
 			volume = GetGadgetState(#GID_VolumeBar)
 			TextToSpeech::SetVolume(volume)
@@ -1406,8 +1406,8 @@ DataSection
 	IconDataCommandAlertEnd:
 EndDataSection
 ; IDE Options = PureBasic 5.45 LTS (Windows - x64)
-; CursorPosition = 139
-; FirstLine = 99
+; CursorPosition = 524
+; FirstLine = 521
 ; Folding = ----
 ; EnableUnicode
 ; EnableXP
